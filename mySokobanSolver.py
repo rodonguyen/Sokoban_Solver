@@ -28,6 +28,7 @@ Last modified by 2022-03-27  by f.maire@qut.edu.au
 # You have to make sure that your code works with 
 # the files provided (search.py and sokoban.py) as your code will be tested 
 # with these files
+from attr import define
 import search 
 import sokoban
 
@@ -369,16 +370,59 @@ class SokobanPuzzle(search.Problem):
     #
     #     You are allowed (and encouraged) to use auxiliary functions and classes
 
-    
+    def define_goal(warehouse):
+        """
+        Define the goal as a String of warehouse without agent, 
+        unfinished boxes and unfilled targets ('@', '$', '.'), 
+        and all boxes are on the targets (hence the '*')
+
+        @return
+            warehouse_string: String
+        """
+        warehouse_string = str(warehouse)
+        warehouse_string = warehouse.replace('.','*') \
+                            .replace('$',' ') \
+                            .replace('@',' ')
+        # Because we replace '@' with ' ', goal_test() 
+        # will have the agent replaced as well
+        return warehouse_string
+
     def __init__(self, warehouse):
-        raise NotImplementedError()
+        self.initial = str(warehouse)
+        self.goal = self.define_goal(warehouse)
 
     def actions(self, state):
         """
-        Return the list of actions that can be executed in the given state.
-        
+        Return the list of executable/legal actions of the agent 
+        in the provided state.
         """
         raise NotImplementedError
+
+    
+    ############ newly added ###############
+    def result(self, state, action):
+        """
+        Return the state after executing 'action' from the given 'state'
+        """
+        raise NotImplementedError
+
+    def goal_test(self, state):
+        """
+        Return True if the provided 'state' is a goal.
+        Comparing strings is thought to be quicker than a for loop checking if boxes are on targets.
+        """
+        state_without_agent = state.replace('@', ' ')
+        return state_without_agent == self.goal
+
+    def path_cost(self, cost, state1, action, state2): # can change the params
+        raise NotImplementedError
+
+    def h(self, node):
+        """
+        Heuristic function for the Sokoban puzzle.......
+        """
+
+    ########################################
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -409,7 +453,7 @@ def check_elem_action_seq(warehouse, action_seq):
     '''
     ALGORITHM DRAFT
 
-    For each action:
+    For each action in the sequence:
         1. If there is a wall in the direction of action, return 'Impossible'.
         2. If there is a box in the direction of action, move to case 1. Otherwise, move to case 2
     - CASE 1: agent push a box 
@@ -458,3 +502,32 @@ def solve_weighted_sokoban(warehouse):
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+"""
++ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + 
+                             CODE CEMETARY
++ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + 
+
+
+Use the below goal_test if the warehouse.goal is not defined. 
+But this one is computing-expensive
+    
+    def goal_test(self, state):
+        '''
+        Return True if the provided 'state' is a goal.
+        '''
+        for box in state.boxes:
+            if box not in state.targets:
+                return False
+        return True
+
+---
+
+
+
+
+
+
+
+
+
+"""
