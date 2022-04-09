@@ -28,7 +28,7 @@ Last modified by 2022-03-27  by f.maire@qut.edu.au
 # You have to make sure that your code works with 
 # the files provided (search.py and sokoban.py) as your code will be tested 
 # with these files
-from attr import define
+
 import search 
 import sokoban
 
