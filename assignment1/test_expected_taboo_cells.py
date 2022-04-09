@@ -5,19 +5,20 @@ from time import perf_counter_ns
 
 def compare_taboo_cells(warehouse_file):
     '''
-    
+    Compare the computed taboo_cells answer with the expected answer, record
+    execution time, and provide feedback to the console.
 
     Parameters
     ----------
-    warehouse_file : TYPE
-        DESCRIPTION.
+    warehouse_file : str
+        Warehouse file path.
 
     Returns
     -------
     bool
-        DESCRIPTION.
-    TYPE
-        DESCRIPTION.
+        True if answers match, else False.
+    int
+        Execution time in nanoseconds.
 
     '''
     warehouse = Warehouse()
