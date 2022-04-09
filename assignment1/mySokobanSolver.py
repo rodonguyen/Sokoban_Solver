@@ -406,6 +406,22 @@ def check_elem_action_seq(warehouse, action_seq):
                string returned by the method  Warehouse.__str__()
     '''
     
+    '''
+    ALGORITHM DRAFT
+
+    For each action:
+        1. If there is a wall in the direction of action, return 'Impossible'.
+        2. If there is a box in the direction of action, move to case 1. Otherwise, move to case 2
+    - CASE 1: agent push a box 
+        3. If there is NOT an empty space after the box (i.e., not another box or wall) in the direction of action, return 'Impossible'.
+        4. Move box and agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate box or agent)
+    - CASE 2: agent does not push any box
+        3. If there is NOT an empty space in the direction of action, return 'Impossible'
+        4. Move Agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate agent)
+
+    After finsishing action-seq, return the warehouse state as a 'string'
+
+    '''
     ##         "INSERT YOUR CODE HERE"
     
     raise NotImplementedError()
