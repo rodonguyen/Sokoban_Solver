@@ -3,6 +3,9 @@ from mySokobanSolver import taboo_cells
 from sokoban import Warehouse
 from time import perf_counter_ns
 
+RED = "\033[1;31m"
+RESET = "\033[0;0m"
+
 def compare_taboo_cells(warehouse_file):
     '''
     Compare the computed taboo_cells answer with the expected answer, record
@@ -28,8 +31,8 @@ def compare_taboo_cells(warehouse_file):
         warehouse.load_warehouse("./warehouses/" + warehouse_file)
     # If exception raised
     except Exception as e:
-        print("\033[1;31m" + warehouse_file, "failed!\033[0;0m Could not load",
-              "file -> " + repr(e) + ".")
+        print(RED + warehouse_file, "failed!" + RESET, "Could not load file",
+              "->", repr(e) + ".")
         return (False, None)
     
     # Get and time answer
@@ -46,9 +49,9 @@ def compare_taboo_cells(warehouse_file):
 
     # If the expected file contains any forbidden characters
     if any(illegal_char in expected_answer for illegal_char in illegal_chars):
-        print("\033[1;31m" + warehouse_file, "failed!\033[0;0m The expected",
-              "answer file contains illegal characters, it most likely hasn't",
-              "been configured yet.")
+        print(RED + warehouse_file, "failed!" + RESET, "The expected answer",
+              "file contains illegal characters, it most likely hasn't been",
+              "configured yet.")
         return (False, None)
 
     # If the generated answer matches the expected answer
@@ -57,7 +60,7 @@ def compare_taboo_cells(warehouse_file):
         return (True, execution_time)
     
     # Generated and expected answer do not match
-    print("\033[1;31m" + warehouse_file, "failed!\n\033[0;0mExpected:\n" + 
+    print(RED + warehouse_file, "failed!" + RESET, "Expected:\n" + 
           expected_answer + "\nActual:\n" + answer)
     return (False, None)
 
