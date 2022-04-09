@@ -28,13 +28,17 @@ class TestTabooCells(unittest.TestCase):
             with open('./taboo_cells_expected/' + warehouse_file, 'r') as file:
                 expected_answer = file.read()
                 
+            forbidden_char = ''
             # If the expected answer contains any forbidden characters
             if any(forbidden_char in expected_answer for forbidden_char in FORBIDDEN_CHARS):
+                print(forbidden_char)
                 print("Could not run test_taboo_cells subtest for {}. Expected answer is likely not configured.".format(warehouse_file.replace(".txt", "")))
                 stdout.flush()
                 continue
             
             with self.subTest():
+                if answer != expected_answer:
+                    print(warehouse_file)
                 self.assertEqual(answer, expected_answer)
                 
 if __name__ == "__main__":
