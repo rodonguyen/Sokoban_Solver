@@ -24,4 +24,4 @@ jobs:
       with:
         python-version: "3.9.7"
     - name: Run tests
-      run: python -m unittest test_taboo_cells.py
+      run: python -m nose
