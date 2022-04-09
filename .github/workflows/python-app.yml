@@ -5,9 +5,15 @@ name: Python application
 
 on:
   push:
-    branches: [ main ]
+    branches: 
+      - main
+      - test_unittest_github
+      - 'test_unittest_github'
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+      - test_unittest_github
+      - 'test_unittest_github'
 
 permissions:
   contents: read
@@ -25,3 +31,6 @@ jobs:
         python-version: "3.9.7"
     - name: Run tests
       run: python -m unittest test_taboo_cells.py
+    - name: Run rodo tests
+      run: |
+        pytest test_unittest_github
