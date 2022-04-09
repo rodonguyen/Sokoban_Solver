@@ -144,8 +144,8 @@ def get_corner_cells(warehouse, cells):
 
 def get_taboo_cells(warehouse, inside_corner_cells):
     '''
-    Identify taboo cells (inside corners that aren't a target, all cells 
-    between taboo inside corners if none of them are targets).
+    Identify taboo cells (inside non-target corners AND 
+    all non-target cells between inside non-target taboo corners).
 
     Parameters
     ----------
