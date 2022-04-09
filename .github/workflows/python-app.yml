@@ -34,4 +34,4 @@ jobs:
     - name: Run rodo tests
       run: |
         pip install pytest
-        pytest test_unittest_github
+        pytest test_unittest_github.py
