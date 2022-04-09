@@ -27,8 +27,14 @@ for y in range(warehouse.nrows):
 #----------------------------------------------------------------------
 
 # Record and display results
-file = open('expected_taboo_cells_'+w[11:], 'w')    # Edit the output location here
+file = open('bin/expected_taboo_cells_'+w[11:], 'w')    # Edit the output location here
 file.write(taboo_cells_string)
+
+file.write('\n\nOriginal warehouse text file:')
+warehouse_txt = open(w, 'r')
+for line in warehouse_txt:
+    file.write(line)
+file.close()
 
 print()
 print('Testing on:', w) 
