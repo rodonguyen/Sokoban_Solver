@@ -7,7 +7,7 @@ w = "warehouses/warehouse_39.txt"               # Change warehouse here
 warehouse.load_warehouse(w)
 
 
-# The code from taboo_cells()
+#------------------ Code from taboo_cells() -----------------------
 inside_cells = mySokobanSolver.get_inside_cells(warehouse)
 inside_corner_cells = mySokobanSolver.get_corner_cells(warehouse, inside_cells)
 taboo_cells_set = mySokobanSolver.get_taboo_cells(warehouse, list(inside_corner_cells))
@@ -24,7 +24,7 @@ for y in range(warehouse.nrows):
             taboo_cells_string += 'X'
         else:
             taboo_cells_string += ' '
-
+#----------------------------------------------------------------------
 
 # Record and display results
 file = open('expected_taboo_cells_'+w[11:], 'w')    # Edit the output location here
