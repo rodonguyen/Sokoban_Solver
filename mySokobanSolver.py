@@ -415,6 +415,20 @@ class SokobanPuzzle(search.Problem):
         return state_without_agent == self.goal
 
     def path_cost(self, cost, state1, action, state2): # can change the params
+        """
+        Return the cost of a solution path that arrives at state2
+        from state1 via action + 'cost' (from beginning to get to state 1). 
+
+        If the problem is such that the path doesn't matter, 
+        this function will only look at state2.  
+        If the path does matter, it will consider c and maybe state1
+        and action.
+
+        Possible path_cost value (Rodo):
+            cost + len(actions)*box_weight 
+            (there may be many phases where part of 'action' 
+            is pushing different boxes with different weights)
+        """
         raise NotImplementedError
 
     def h(self, node):
