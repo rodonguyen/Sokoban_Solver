@@ -31,6 +31,8 @@ Last modified by 2022-03-27  by f.maire@qut.edu.au
 
 import search 
 import sokoban
+import time
+
 
 # The index of the x-coordinate in a 2D tuple
 X_INDEX = 0
@@ -370,17 +372,19 @@ class SokobanPuzzle(search.Problem):
     #
     #     You are allowed (and encouraged) to use auxiliary functions and classes
 
-    def define_goal(warehouse):
+    def define_goal(self, warehouse):
         """
         Define the goal as a String of warehouse without agent, 
         unfinished boxes and unfilled targets ('@', '$', '.'), 
         and all boxes are on the targets (hence the '*')
 
+        @params
+            warehouse <Warehouse object>
         @return
-            warehouse_string: String
+            warehouse_string <String>
         """
         warehouse_string = str(warehouse)
-        warehouse_string = warehouse.replace('.','*') \
+        warehouse_string = warehouse_string.replace('.','*') \
                             .replace('$',' ') \
                             .replace('@',' ')
         # Because we replace '@' with ' ', goal_test() 
@@ -391,19 +395,144 @@ class SokobanPuzzle(search.Problem):
         self.initial = str(warehouse)
         self.goal = self.define_goal(warehouse)
 
+
+    def find(self, state, object):
+        '''
+        Find the object and return its coordinates e.g. (2,4)
+        @params
+            state <String> 
+                String presentation of a Warehouse object
+            object <String>
+                The object you want to locate
+
+        @return
+            location <tuple>
+                The location of the object in (x,y)
+                Or return -1 if not found
+
+        '''
+
+        # Replace object with possible symbols
+        if object == 'agent':
+            objects = ['@', '!'] 
+        else:
+            raise Exception('Invalid object. Input object = {0}'.format(object))
+                
+
+        lines = state.split('\n')
+        for y, line in enumerate(lines):
+            for o in objects:
+                if line.find(o) != -1:
+                    return(line.find('.'), y)  # Found and return position
+        
+        return -1  # Can not found object in state / str(warehouse)
+
+    def identify(self, state, x, y):
+        '''
+        Return the object at the provided coordinates 'x' and 'y' in 'state'. Return -1 if the coordinates if outside of the warehouse state.
+        @params
+            state <String> 
+                String presentation of a Warehouse object
+            x <Integer>
+                x coordinate
+            y <Integer>
+                y coordinate
+            
+        @return
+            object <String>
+                The object found at (x,y)
+                Or return -1 if coordinates is outside of the warehouse state.
+
+        '''
+        lines = state.split('\n')
+        try:
+            object = lines[y][x]
+        except:
+            object = -1
+        return object
+
+
     def actions(self, state):
         """
         Return the list of executable/legal actions of the agent 
         in the provided state.
+
+        @params
+            state <String> 
+                String presentation of a Warehouse object
+
+        @return
+            legal_moves <List>
+                a List of legal moves for agent
+                e.g. ['up', 'down', 'right', 'left'], []
         """
-        raise NotImplementedError
+        '''
+        ALGORITHM DRAFT
+
+        For each action in the sequence:
+            1. If there is a wall in the direction of action, return 'Impossible'.
+            2. If there is a box in the direction of action, move to case 1. Otherwise, move to case 2
+        - CASE 1: agent push a box 
+            3. If there is NOT an empty space after the box (i.e., not another box or wall) in the direction of action, return 'Impossible'.
+            4. Move box and agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate box or agent)
+        - CASE 2: agent does not push any box
+            3. If there is NOT an empty space in the direction of action, return 'Impossible'
+            4. Move Agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate agent)
+
+        After finsishing action-seq, return the warehouse state as a 'string'
+        '''
+        agent_position = self.find(state, 'agent')
+        if agent_position == -1:
+            raise Exception('Agent is not found in state! Your warehouse look like this:\b {0}'.format(state))
+
+        legal_moves = []
+        up    = ( 0 , -1,  'U')
+        down  = ( 0 ,  1,  'D')
+        left  = (-1 ,  0,  'L')
+        right = ( 1 ,  0,  'R')
+        possible_moves = [up, down, left, right]
 
     
-    ############ newly added ###############
+        for move in possible_moves:
+            print(self.identify(state, agent_position[X_INDEX] + move[X_INDEX], 
+                                    agent_position[Y_INDEX] + move[Y_INDEX]))
+
+            # Empty space
+            if self.identify(state, agent_position[X_INDEX] + move[X_INDEX], 
+                                    agent_position[Y_INDEX] + move[Y_INDEX]) in [' ', '.']:
+                legal_moves.append(move[2])
+                continue
+
+            # Wall
+            if self.identify(state, agent_position[X_INDEX] + move[X_INDEX], 
+                                    agent_position[Y_INDEX] + move[Y_INDEX]) == '#':
+                continue
+
+            # Box
+            if self.identify(state, agent_position[X_INDEX] + move[X_INDEX], 
+                                    agent_position[Y_INDEX] + move[Y_INDEX]) in ['*', '$']:
+                # Box and Wall
+                if self.identify(state, agent_position[X_INDEX] + move[X_INDEX] * 2, 
+                                        agent_position[Y_INDEX] + move[Y_INDEX] * 2) in ['*', '$', '#']:
+                    continue
+                # Empty space
+                elif self.identify(state, agent_position[X_INDEX] + move[X_INDEX] * 2, 
+                                        agent_position[Y_INDEX] + move[Y_INDEX] * 2) in [' ', '.']:
+                    legal_moves.append(move[2])
+
+
+        return legal_moves
+
+    
     def result(self, state, action):
         """
         Return the state after executing 'action' from the given 'state'
         """
+        #######################
+        #  Rodo to implement  #
+        #######################
+
+
         raise NotImplementedError
 
     def goal_test(self, state):
@@ -413,6 +542,9 @@ class SokobanPuzzle(search.Problem):
         """
         state_without_agent = state.replace('@', ' ')
         return state_without_agent == self.goal
+
+
+    ############ newly added ###############
 
     def path_cost(self, cost, state1, action, state2): # can change the params
         """
@@ -461,7 +593,7 @@ def check_elem_action_seq(warehouse, action_seq):
         Otherwise, if all actions were successful, return                 
                A string representing the state of the puzzle after applying
                the sequence of actions.  This must be the same string as the
-               string returned by the method  Warehouse.__str__()
+               string returned by the method  Warehouse.__str__() #important
     '''
     
     '''
@@ -480,9 +612,22 @@ def check_elem_action_seq(warehouse, action_seq):
     After finsishing action-seq, return the warehouse state as a 'string'
 
     '''
-    ##         "INSERT YOUR CODE HERE"
+    # raise NotImplementedError()
+
+
+    state = str(warehouse)
     
-    raise NotImplementedError()
+    for step in action_seq:
+        legal_actions = SokobanPuzzle.actions(state)
+        if step in legal_actions:
+            next_state = SokobanPuzzle.result(state, step)
+            state = next_state
+        else: 
+            return 'Impossible'
+
+    # Update 'warehouse' Object        
+    warehouse = warehouse.from_string(state)
+    return state
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -515,6 +660,28 @@ def solve_weighted_sokoban(warehouse):
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+if __name__ == "__main__":
+
+    warehouse = sokoban.Warehouse()
+    w = "warehouses/warehouse_39.txt"               # Change warehouse here
+    warehouse.load_warehouse(w)
+    sokobanPuzzle = SokobanPuzzle(warehouse)
+
+    print(sokobanPuzzle.actions(sokobanPuzzle.initial))
+
+
+    # t0 = time.time()
+    # solution = search.astar_graph_search(sokobanPuzzle)
+    # t1 = time.time()
+
+    # sokobanPuzzle.print_solution(solution) Not yet implemented
+
+    # print ("Solver took ",t1-t0, ' seconds')
+
+
+
+
 
 """
 + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + 
