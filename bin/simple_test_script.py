@@ -1,12 +1,45 @@
+
+import sys
+# insert at 1, 0 is the script path (or '' in REPL)
+sys.path.insert(1, '..')
+sys.path.insert(0, '../')
+sys.path.insert(0, '/..')
+sys.path.insert(0, '../CAB320_assignments')
+sys.path.append('../sokoban.py')
 import sokoban
 import mySokobanSolver
 
 
-warehouse = sokoban.Warehouse()
-w = "warehouses/warehouse_39.txt"               # Change warehouse here
-warehouse.load_warehouse(w)
+
+def do_2():
+    warehouse = sokoban.Warehouse()
+    w = "warehouses/warehouse_39.txt"               # Change warehouse here
+    warehouse.load_warehouse(w)
+    sokobanPuzzle = mySokobanSolver.SokobanPuzzle(warehouse)
+
+    rows = str(warehouse).split('\n')
+    for column, row in enumerate(rows):
+        if row.find('.') != -1:
+            print(column,row.find('.'))
+            break
+
+
+    print(str(warehouse).index('@'))
+
+    print(warehouse.ncols)
+
+    # print(str(warehouse))
+    # print(sokobanPuzzle.goal_test(sokobanPuzzle.initial))
+
+    print(sokobanPuzzle.initial)
+
 
 def do_1():
+    warehouse = sokoban.Warehouse()
+    w = "../warehouses/warehouse_39.txt"               # Change warehouse here
+    warehouse.load_warehouse(w)
+
+
     #------------------ Code from taboo_cells() -----------------------
     inside_cells = mySokobanSolver.get_inside_cells(warehouse)
     inside_corner_cells = mySokobanSolver.get_corner_cells(warehouse, inside_cells)
@@ -43,5 +76,24 @@ def do_1():
     print('Taboo cells:', taboo_cells_set)
 
 
-def do_2():
-    return 0
+
+
+
+do_2()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

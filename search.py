@@ -417,7 +417,7 @@ def best_first_graph_search(problem, f):
                 # the node child.  Read implementation of PriorityQueue
                 if f(child) < frontier[child]:
                     del frontier[child] # delete the incumbent node
-                    frontier.append(child) # 
+                    frontier.append(child)
     return None
 
 
