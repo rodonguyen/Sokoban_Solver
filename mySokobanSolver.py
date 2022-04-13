@@ -51,6 +51,23 @@ def my_team():
     return [(10210776, 'Mitchell', 'Egan'), (10396489, 'Jaydon', 'Gunzburg'), (10603280, 'Rodo', 'Nguyen')]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+def manhattan_dist(start_cell, end_cell):
+    '''
+    Finds the manhattan distance from start_cell to end_cell
+
+    Parameters
+    ----------
+    start_cell : (x, y)
+    end_cell : (x, y)
+
+    Returns
+    -------
+    length
+        Length of path from start to end
+    '''
+    return abs(end_cell[X_INDEX]-start_cell[X_INDEX]) \
+         + abs(end_cell[Y_INDEX]-start_cell[Y_INDEX])
+
 
 def get_inside_cells(warehouse, inside_cells = None, cell = None):
     '''
