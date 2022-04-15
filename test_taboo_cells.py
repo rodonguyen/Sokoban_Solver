@@ -37,8 +37,6 @@ class TestTabooCells(unittest.TestCase):
                 continue
             
             with self.subTest():
-                if answer != expected_answer:
-                    print(warehouse_file)
                 self.assertEqual(answer, expected_answer)
                 
 if __name__ == "__main__":
