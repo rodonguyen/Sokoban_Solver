@@ -32,6 +32,8 @@ Last modified by 2022-03-27  by f.maire@qut.edu.au
 import search 
 import sokoban
 import time
+from numpy import array
+from scipy.optimize import linear_sum_assignment
 
 
 # The index of the x-coordinate in a 2D tuple
@@ -560,7 +562,6 @@ class SokobanPuzzle(search.Problem):
         state_without_agent = state.replace('@', ' ')
         return state_without_agent == self.goal
 
-
     ############ newly added ###############
 
     def path_cost(self, cost, state1, action, state2): # can change the params
@@ -584,6 +585,25 @@ class SokobanPuzzle(search.Problem):
         """
         Heuristic function for the Sokoban puzzle.......
         """
+        # Will need to be refactored to suit the format of the state, assuming
+        # here a tuple containing the player (0) & the list of boxes (1)
+        cost_matrix = []
+        
+        boxes = node.state[1]
+        
+        for box, weight in zip(boxes, warehouse.weights):    
+            cost_row = []
+            for target in warehouse.targets:
+                cost = manhattan_dist(box, target) * (weight + 1)
+                cost_row.append(cost)
+                
+            cost_matrix.append(cost_row)
+            
+        cost_matrix = array(cost_matrix)
+            
+        boxes, targets = linear_sum_assignment(cost_matrix)
+        
+        return cost_matrix[boxes, targets].sum()
 
     ########################################
 
