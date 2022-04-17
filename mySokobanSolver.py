@@ -29,6 +29,7 @@ Last modified by 2022-03-27  by f.maire@qut.edu.au
 # the files provided (search.py and sokoban.py) as your code will be tested 
 # with these files
 
+from asyncio.windows_events import NULL
 import search 
 import sokoban
 import time
@@ -362,13 +363,20 @@ def taboo_cells(warehouse):
                 taboo_cells_string += 'X'
             else:
                 taboo_cells_string += ' '
-                
-    
     return taboo_cells_string
 
+def get_taboo_cell_coordinates(taboo_cells_string):
+
+        #####################
+        # CODE to be filled #
+        #####################
+
+    taboo_cells_coordinates = taboo_cells_string  # delete this
+
+    return taboo_cells_coordinates
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
 class SokobanPuzzle(search.Problem):
     '''
     An instance of the class 'SokobanPuzzle' represents a Sokoban puzzle.
@@ -379,113 +387,24 @@ class SokobanPuzzle(search.Problem):
     the provided module 'search.py'. 
     
     '''
-    
-    #
-    #         "INSERT YOUR CODE HERE"
-    #
-    #     Revisit the sliding puzzle and the pancake puzzle for inspiration!
-    #
-    #     Note that you will need to add several functions to 
-    #     complete this class. For example, a 'result' method is needed
-    #     to satisfy the interface of 'search.Problem'.
-    #
-    #     You are allowed (and encouraged) to use auxiliary functions and classes
-
-    def define_goal(self, warehouse):
-        """
-        Define the goal as a String of warehouse without agent, 
-        unfinished boxes and unfilled targets ('@', '$', '.'), 
-        and all boxes are on the targets (hence the '*')
-
-        @params
-            warehouse <Warehouse object>
-        @return
-            warehouse_string <String>
-        """
-        warehouse_string = str(warehouse)
-        warehouse_string = warehouse_string.replace('.','*') \
-                            .replace('$',' ') \
-                            .replace('@',' ')
-        # Because we replace '@' with ' ', goal_test() 
-        # will have the agent replaced as well
-        return warehouse_string
-
     def __init__(self, warehouse):
-        self.initial = str(warehouse)
-        self.goal = self.define_goal(warehouse)
-
-
-    def find(self, state, object):
-        '''
-        Find the object and return its coordinates e.g. (2,4)
-        @params
-            state <String> 
-                String presentation of a Warehouse object
-            object <String>
-                The object you want to locate
-
-        @return
-            location <tuple>
-                The location of the object in (x,y)
-                Or return -1 if not found
-
-        '''
-
-        # Replace object with possible symbols
-        if object == 'agent':
-            objects = ['@', '!'] 
-        else:
-            raise Exception('Invalid object. Input object = {0}'.format(object))
-                
-
-        lines = state.split('\n')
-        for y, line in enumerate(lines):
-            for o in objects:
-                if line.find(o) != -1:
-                    return(line.find('.'), y)  # Found and return position
-        
-        return -1  # Can not found object in state / str(warehouse)
-
-    def identify(self, state, x, y):
-        '''
-        Return the object at the provided coordinates 'x' and 'y' in 'state'. Return -1 if the coordinates if outside of the warehouse state.
-        @params
-            state <String> 
-                String presentation of a Warehouse object
-            x <Integer>
-                x coordinate
-            y <Integer>
-                y coordinate
-            
-        @return
-            object <String>
-                The object found at (x,y)
-                Or return -1 if coordinates is outside of the warehouse state.
-
-        '''
-        lines = state.split('\n')
-        try:
-            object = lines[y][x]
-        except:
-            object = -1
-        return object
-
+        self.warehouse = warehouse
+        self.taboo_cells = get_taboo_cell_coordinates(taboo_cells(warehouse))
+        self.initial = list((warehouse.worker,)) + warehouse.boxes
 
     def actions(self, state):
-        """
+        '''
         Return the list of executable/legal actions of the agent 
         in the provided state.
 
         @params
             state <String> 
                 String presentation of a Warehouse object
-
         @return
             legal_moves <List>
                 a List of legal moves for agent
-                e.g. ['up', 'down', 'right', 'left'], []
-        """
-        '''
+                e.g. ['U', 'D', 'R', 'L'], []
+        ------------------------------------------------------------------------
         ALGORITHM DRAFT
 
         For each action in the sequence:
@@ -497,9 +416,233 @@ class SokobanPuzzle(search.Problem):
         - CASE 2: agent does not push any box
             3. If there is NOT an empty space in the direction of action, return 'Impossible'
             4. Move Agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate agent)
-
-        After finsishing action-seq, return the warehouse state as a 'string'
         '''
+        legal_moves = []
+        up    = ( 0 , -1,  'U')
+        down  = ( 0 ,  1,  'D')
+        left  = (-1 ,  0,  'L')
+        right = ( 1 ,  0,  'R')
+        possible_moves = [up, down, left, right]
+
+        #####################
+        # CODE to be filled #
+        #####################
+
+        return legal_moves
+
+    
+    def result(self, state, action):
+        """
+        Return the state after executing 'action' from the given 'state'
+        """
+        #####################
+        # CODE to be filled #
+        #####################
+        
+
+        raise NotImplementedError
+
+    def goal_test(self, state):
+        '''
+        Return True if the provided 'state' is a goal.
+        '''
+        return set(state[1:]) == set(self.warehouse.targets)
+
+
+    def path_cost(self, cost, state1, action, state2): # can change the params
+        '''
+        Return the cost of a solution path that arrives at state2
+        from state1 via action + 'cost' (from beginning to get to state 1). 
+
+        If the problem is such that the path doesn't matter, 
+        this function will only look at state2.  
+        If the path does matter, it will consider c and maybe state1
+        and action.
+        '''
+        
+        #####################
+        # CODE to be filled #
+        #####################
+
+        raise NotImplementedError
+
+    def h(self, node):
+        """
+        Heuristic function for the Sokoban puzzle.......
+        """
+        # Will need to be refactored to suit the format of the state, assuming
+        # here a tuple containing the player (0) & the list of boxes (1)
+        cost_matrix = []
+        boxes = node.state[1]
+        
+        for box, weight in zip(boxes, warehouse.weights):    
+            cost_row = []
+            for target in warehouse.targets:
+                cost = manhattan_dist(box, target) * (weight + 1)
+                cost_row.append(cost)
+            cost_matrix.append(cost_row)
+            
+        cost_matrix = array(cost_matrix)
+        boxes, targets = linear_sum_assignment(cost_matrix)
+        return cost_matrix[boxes, targets].sum()
+
+    ########################################
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+def check_elem_action_seq(warehouse, action_seq):
+    '''
+    Determine if the sequence of actions listed in 'action_seq' is legal or not.
+    
+    Important notes:
+      - a legal sequence of actions does not necessarily solve the puzzle.
+      - an action is legal even if it pushes a box onto a taboo cell.
+        
+    @param warehouse: a valid Warehouse object
+
+    @param action_seq: a sequence of legal actions.
+           For example, ['Left', 'Down', Down','Right', 'Up', 'Down']
+           
+    @return
+        The string 'Impossible', if one of the action was not valid.
+           For example, if the agent tries to push two boxes at the same time,
+                        or push a box into a wall.
+        Otherwise, if all actions were successful, return                 
+               A string representing the state of the puzzle after applying
+               the sequence of actions.  This must be the same string as the
+               string returned by the method  Warehouse.__str__() #important
+    
+    ----------------------------------------------------------
+    ALGORITHM DRAFT
+
+    For each action in the sequence:
+        1. If there is a wall in the direction of action, return 'Impossible'.
+        2. If there is a box in the direction of action, move to case 1. Otherwise, move to case 2
+    - CASE 1: agent push a box 
+        3. If there is NOT an empty space after the box (i.e., not another box or wall) in the direction of action, return 'Impossible'.
+        4. Move box and agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate box or agent)
+    - CASE 2: agent does not push any box
+        3. If there is NOT an empty space in the direction of action, return 'Impossible'
+        4. Move Agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate agent)
+
+    After finsishing action-seq, return the warehouse state as a 'string'
+
+    '''
+
+    #####################
+    # CODE to be filled #
+    #####################
+    state = NULL
+    return state
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+def solve_weighted_sokoban(warehouse):
+    '''
+    This function analyses the given warehouse.
+    It returns the two items. The first item is an action sequence solution. 
+    The second item is the total cost of this action sequence.
+    
+    @param 
+     warehouse: a valid Warehouse object
+
+    @return
+    
+        If puzzle cannot be solved 
+            return 'Impossible', None
+        
+        If a solution was found, 
+            return S, C 
+            where S is a list of actions that solves
+            the given puzzle coded with 'Left', 'Right', 'Up', 'Down'
+            For example, ['Left', 'Down', Down','Right', 'Up', 'Down']
+            If the puzzle is already in a goal state, simply return []
+            C is the total cost of the action sequence C
+    '''
+    
+    #####################
+    # CODE to be filled #
+    #####################
+
+    raise NotImplementedError()
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+if __name__ == "__main__":
+
+    warehouse = sokoban.Warehouse()
+    w = "warehouses/warehouse_39.txt"               # Change warehouse here
+    warehouse.load_warehouse(w)
+    sokobanPuzzle = SokobanPuzzle(warehouse)
+
+    # print(warehouse.boxes)
+    # print(warehouse.worker)
+    # print(sokobanPuzzle.initial)
+    print(sokobanPuzzle.warehouse.targets)
+    
+
+
+
+    # t0 = time.time()
+    # solution = search.astar_graph_search(sokobanPuzzle)
+    # t1 = time.time()
+
+    # sokobanPuzzle.print_solution(solution) Not yet implemented
+
+    # print ("Solver took ",t1-t0, ' seconds')
+
+
+
+
+
+"""
++ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + 
+                             CODE CEMETARY
++ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + 
+
+class SokobanPuzzle(search.Problem):
+    '''
+    An instance of the class 'SokobanPuzzle' represents a Sokoban puzzle.
+    An instance contains information about the walls, the targets, the boxes
+    and the worker.
+
+    Your implementation should be fully compatible with the search functions of 
+    the provided module 'search.py'. 
+    
+    '''
+    def __init__(self, warehouse):
+        self.warehouse = warehouse
+        self.taboo_cells = get_taboo_cell_coordinates(taboo_cells(warehouse))
+        self.initial = list((warehouse.worker,)) + warehouse.boxes
+
+    def actions(self, state):
+        '''
+        Return the list of executable/legal actions of the agent 
+        in the provided state.
+
+        @params
+            state <String> 
+                String presentation of a Warehouse object
+        @return
+            legal_moves <List>
+                a List of legal moves for agent
+                e.g. ['U', 'D', 'R', 'L'], []
+        ------------------------------------------------------------------------
+        ALGORITHM DRAFT
+
+        For each action in the sequence:
+            1. If there is a wall in the direction of action, return 'Impossible'.
+            2. If there is a box in the direction of action, move to case 1. Otherwise, move to case 2
+        - CASE 1: agent push a box 
+            3. If there is NOT an empty space after the box (i.e., not another box or wall) in the direction of action, return 'Impossible'.
+            4. Move box and agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate box or agent)
+        - CASE 2: agent does not push any box
+            3. If there is NOT an empty space in the direction of action, return 'Impossible'
+            4. Move Agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate agent)
+        '''
+
         agent_position = self.find(state, 'agent')
         if agent_position == -1:
             raise Exception('Agent is not found in state! Your warehouse look like this:\b {0}'.format(state))
@@ -538,76 +681,17 @@ class SokobanPuzzle(search.Problem):
                 elif self.identify(state, agent_position[X_INDEX] + move[X_INDEX] * 2, 
                                         agent_position[Y_INDEX] + move[Y_INDEX] * 2) in [' ', '.']:
                     legal_moves.append(move[2])
-
-
         return legal_moves
 
-    
-    def result(self, state, action):
-        """
-        Return the state after executing 'action' from the given 'state'
-        """
-        #######################
-        #  Rodo to implement  #
-        #######################
 
-
-        raise NotImplementedError
-
-    def goal_test(self, state):
-        """
-        Return True if the provided 'state' is a goal.
-        Comparing strings is thought to be quicker than a for loop checking if boxes are on targets.
-        """
-        state_without_agent = state.replace('@', ' ')
-        return state_without_agent == self.goal
-
-    ############ newly added ###############
-
-    def path_cost(self, cost, state1, action, state2): # can change the params
-        """
-        Return the cost of a solution path that arrives at state2
-        from state1 via action + 'cost' (from beginning to get to state 1). 
-
-        If the problem is such that the path doesn't matter, 
-        this function will only look at state2.  
-        If the path does matter, it will consider c and maybe state1
-        and action.
-
+--------------------------------------
         Possible path_cost value (Rodo):
             cost + len(actions)*box_weight 
             (there may be many phases where part of 'action' 
             is pushing different boxes with different weights)
-        """
-        raise NotImplementedError
 
-    def h(self, node):
-        """
-        Heuristic function for the Sokoban puzzle.......
-        """
-        # Will need to be refactored to suit the format of the state, assuming
-        # here a tuple containing the player (0) & the list of boxes (1)
-        cost_matrix = []
-        
-        boxes = node.state[1]
-        
-        for box, weight in zip(boxes, warehouse.weights):    
-            cost_row = []
-            for target in warehouse.targets:
-                cost = manhattan_dist(box, target) * (weight + 1)
-                cost_row.append(cost)
-                
-            cost_matrix.append(cost_row)
-            
-        cost_matrix = array(cost_matrix)
-            
-        boxes, targets = linear_sum_assignment(cost_matrix)
-        
-        return cost_matrix[boxes, targets].sum()
 
-    ########################################
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+--------------------------------------
 
 def check_elem_action_seq(warehouse, action_seq):
     '''
@@ -631,9 +715,8 @@ def check_elem_action_seq(warehouse, action_seq):
                A string representing the state of the puzzle after applying
                the sequence of actions.  This must be the same string as the
                string returned by the method  Warehouse.__str__() #important
-    '''
     
-    '''
+    ----------------------------------------------------------
     ALGORITHM DRAFT
 
     For each action in the sequence:
@@ -649,9 +732,6 @@ def check_elem_action_seq(warehouse, action_seq):
     After finsishing action-seq, return the warehouse state as a 'string'
 
     '''
-    # raise NotImplementedError()
-
-
     state = str(warehouse)
     
     for step in action_seq:
@@ -665,86 +745,23 @@ def check_elem_action_seq(warehouse, action_seq):
     # Update 'warehouse' Object        
     warehouse = warehouse.from_string(state)
     return state
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-def solve_weighted_sokoban(warehouse):
-    '''
-    This function analyses the given warehouse.
-    It returns the two items. The first item is an action sequence solution. 
-    The second item is the total cost of this action sequence.
-    
-    @param 
-     warehouse: a valid Warehouse object
-
-    @return
-    
-        If puzzle cannot be solved 
-            return 'Impossible', None
-        
-        If a solution was found, 
-            return S, C 
-            where S is a list of actions that solves
-            the given puzzle coded with 'Left', 'Right', 'Up', 'Down'
-            For example, ['Left', 'Down', Down','Right', 'Up', 'Down']
-            If the puzzle is already in a goal state, simply return []
-            C is the total cost of the action sequence C
-
-    '''
-    
-    raise NotImplementedError()
-
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-if __name__ == "__main__":
-
-    warehouse = sokoban.Warehouse()
-    w = "warehouses/warehouse_39.txt"               # Change warehouse here
-    warehouse.load_warehouse(w)
-    sokobanPuzzle = SokobanPuzzle(warehouse)
-
-    print(sokobanPuzzle.actions(sokobanPuzzle.initial))
-
-
-    # t0 = time.time()
-    # solution = search.astar_graph_search(sokobanPuzzle)
-    # t1 = time.time()
-
-    # sokobanPuzzle.print_solution(solution) Not yet implemented
-
-    # print ("Solver took ",t1-t0, ' seconds')
-
-
-
-
-
-"""
-+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + 
-                             CODE CEMETARY
-+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + 
-
-
-Use the below goal_test if the warehouse.goal is not defined. 
-But this one is computing-expensive
-    
-    def goal_test(self, state):
-        '''
-        Return True if the provided 'state' is a goal.
-        '''
-        for box in state.boxes:
-            if box not in state.targets:
-                return False
-        return True
-
----
+--------------------------------------
 
 
 
 
 
 
+
+--------------------------------------
+
+
+
+
+
+
+
+--------------------------------------
 
 
 
