@@ -41,6 +41,9 @@ from scipy.optimize import linear_sum_assignment
 X_INDEX = 0
 # The index of the y-coordinate in a 2D tuple
 Y_INDEX = 1
+WORKER_INDEX = 0
+BOX_INDEX = 1
+POSSIBLE_MOVE = {'U':(0,-1), 'D':(0,1), 'L':(-1,0), 'R':(1,0) }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -435,18 +438,18 @@ class SokobanPuzzle(search.Problem):
         # left  = (-1 ,  0,  'L')
         # right = ( 1 ,  0,  'R')
         possible_moves = {'U':(0,-1), 'D':(0,1), 'L':(-1,0), 'R':(1,0) }
-        x, y = self.warehouse.worker
+        x, y = state[WORKER_INDEX]
 
-        for move in possible_moves.keys():
+        for move in possible_moves.values():
             x_next, y_next = x + move[X_INDEX], y + move[Y_INDEX]
             
             # Wall
             if (x_next, y_next) in self.warehouse.walls: continue
             # Box
-            elif (x_next, y_next) in self.warehouse.boxes:
+            elif (x_next, y_next) in state[BOX_INDEX:]:
                 x_2_next, y_2_next = x + move[X_INDEX]*2, y + move[Y_INDEX]*2
                 # Another box / wall / taboo cells after box
-                if (x_2_next, y_2_next) in (self.warehouse.boxes + self.warehouse.walls + self.taboo_cells):
+                if (x_2_next, y_2_next) in (list(state[BOX_INDEX]) + self.warehouse.walls + self.taboo_cells):
                     continue 
             # Empty space / Worker can move the box
             legal_moves += move
@@ -463,12 +466,23 @@ class SokobanPuzzle(search.Problem):
         """
         Return the state after executing 'action' from the given 'state'
         """
-        #####################
-        # CODE to be filled #
-        #####################
-        
+        # assert action in self.actions(state)
 
-        raise NotImplementedError
+        possible_moves = {'U':(0,-1), 'D':(0,1), 'L':(-1,0), 'R':(1,0) }
+        move = possible_moves[action]
+        x, y = state[WORKER_INDEX]
+        x_next, y_next = x + move[X_INDEX], y + move[Y_INDEX]
+        
+        # Move box if applicable
+        if (x_next, y_next) in state[BOX_INDEX]:
+            x_2_next, y_2_next = x + move[X_INDEX]*2, y + move[Y_INDEX]*2
+            box_index = state.index((x_next, y_next))
+            state[box_index] = (x_2_next, y_2_next)
+        
+        # Move worker
+        state[WORKER_INDEX] = (x_next, y_next)
+
+        return state
 
     def goal_test(self, state):
         '''
@@ -514,7 +528,6 @@ class SokobanPuzzle(search.Problem):
         boxes, targets = linear_sum_assignment(cost_matrix)
         return cost_matrix[boxes, targets].sum()
 
-    ########################################
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
