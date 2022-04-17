@@ -33,6 +33,7 @@ from asyncio.windows_events import NULL
 import search 
 import sokoban
 import time
+from random import choice
 from numpy import array
 from scipy.optimize import linear_sum_assignment
 
@@ -440,27 +441,20 @@ class SokobanPuzzle(search.Problem):
         possible_moves = {'U':(0,-1), 'D':(0,1), 'L':(-1,0), 'R':(1,0) }
         x, y = state[WORKER_INDEX]
 
-        for move in possible_moves.values():
-            x_next, y_next = x + move[X_INDEX], y + move[Y_INDEX]
+        for move, vector in possible_moves.items():
+            x_next, y_next = x + vector[X_INDEX], y + vector[Y_INDEX]
             
             # Wall
             if (x_next, y_next) in self.warehouse.walls: continue
             # Box
             elif (x_next, y_next) in state[BOX_INDEX:]:
-                x_2_next, y_2_next = x + move[X_INDEX]*2, y + move[Y_INDEX]*2
+                x_2_next, y_2_next = x + vector[X_INDEX]*2, y + vector[Y_INDEX]*2
                 # Another box / wall / taboo cells after box
-                if (x_2_next, y_2_next) in (list(state[BOX_INDEX]) + self.warehouse.walls + self.taboo_cells):
+                if (x_2_next, y_2_next) in (list(state[BOX_INDEX:]) + self.warehouse.walls + self.taboo_cells):
                     continue 
             # Empty space / Worker can move the box
             legal_moves += move
         return legal_moves
-
-            #     # Empty space after box
-            #     box_index = self.warehouse.boxes.index((x_next, y_next))
-            #     self.warehouse.boxes[box_index] = (x_2_next, y_2_next)
-            
-            # # Empty space / Worker can move
-            # self.warehouse.worker = (x_next, y_next)
     
     def result(self, state, action):
         """
@@ -619,22 +613,39 @@ if __name__ == "__main__":
     sokobanPuzzle = SokobanPuzzle(warehouse)
 
     # Test output format of warehouse attributes
-    print(warehouse.boxes)
-    print(warehouse.worker)
-    print(sokobanPuzzle.initial)
-    print(sokobanPuzzle.warehouse.targets)
-    print(warehouse.boxes + warehouse.walls)
+    # print(warehouse.boxes)
+    # print(warehouse.worker)
+    # print(sokobanPuzzle.initial)
+    # print(sokobanPuzzle.warehouse.targets)
+    # print(warehouse.boxes + warehouse.walls)
 
-    # Test get_taboo_cell_coordinates()
+    # # Test get_taboo_cell_coordinates()
+    # print(warehouse)
+    # taboo_cells_str = taboo_cells(warehouse)
+    # print(taboo_cells_str)
+    # coords = get_taboo_cell_coordinates(taboo_cells_str)
+    # print(coords)
+    # print(warehouse.walls + coords)
+    # print((3,7) in coords)
+
+    # test action and result
     print(warehouse)
-    taboo_cells_str = taboo_cells(warehouse)
-    print(taboo_cells_str)
-    coords = get_taboo_cell_coordinates(taboo_cells_str)
-    print(coords)
-    print(warehouse.walls + coords)
-    print((3,7) in coords)
+    state = sokobanPuzzle.initial
+    print(state)
+    for i in range(10):
+        actions = sokobanPuzzle.actions(state)
+        print(actions)
+        action = choice(actions)
+        print(action)
+        state = sokobanPuzzle.result(state, action)
+        print(state)
+        
+    # Test check_elem_action_seq
+    print()
+    action_seq = ['R', 'U', 'U', 'U', 'L'] #, 'L']
+    print(check_elem_action_seq(warehouse, action_seq))
 
-    
+
     # t0 = time.time()
     # solution = search.astar_graph_search(sokobanPuzzle)
     # t1 = time.time()
