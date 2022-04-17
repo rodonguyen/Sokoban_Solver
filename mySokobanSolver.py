@@ -44,7 +44,7 @@ X_INDEX = 0
 Y_INDEX = 1
 WORKER_INDEX = 0
 BOX_INDEX = 1
-POSSIBLE_MOVE = {'U':(0,-1), 'D':(0,1), 'L':(-1,0), 'R':(1,0) }
+POSSIBLE_MOVES = {'U':(0,-1), 'D':(0,1), 'L':(-1,0), 'R':(1,0) }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -434,14 +434,9 @@ class SokobanPuzzle(search.Problem):
             4. Move Agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate agent)
         '''
         legal_moves = []
-        # up    = ( 0 , -1,  'U')
-        # down  = ( 0 ,  1,  'D')
-        # left  = (-1 ,  0,  'L')
-        # right = ( 1 ,  0,  'R')
-        possible_moves = {'U':(0,-1), 'D':(0,1), 'L':(-1,0), 'R':(1,0) }
         x, y = state[WORKER_INDEX]
 
-        for move, vector in possible_moves.items():
+        for move, vector in POSSIBLE_MOVES.items():
             x_next, y_next = x + vector[X_INDEX], y + vector[Y_INDEX]
             
             # Wall
@@ -460,16 +455,15 @@ class SokobanPuzzle(search.Problem):
         """
         Return the state after executing 'action' from the given 'state'
         """
-        # assert action in self.actions(state)
-
-        possible_moves = {'U':(0,-1), 'D':(0,1), 'L':(-1,0), 'R':(1,0) }
-        move = possible_moves[action]
+        # assert action in self.actions(state)  
+        POSSIBLE_MOVES = {'U':(0,-1), 'D':(0,1), 'L':(-1,0), 'R':(1,0) }
+        vector = POSSIBLE_MOVES[action]
         x, y = state[WORKER_INDEX]
-        x_next, y_next = x + move[X_INDEX], y + move[Y_INDEX]
+        x_next, y_next = x + vector[X_INDEX], y + vector[Y_INDEX]
         
         # Move box if applicable
         if (x_next, y_next) in state[BOX_INDEX]:
-            x_2_next, y_2_next = x + move[X_INDEX]*2, y + move[Y_INDEX]*2
+            x_2_next, y_2_next = x + vector[X_INDEX]*2, y + vector[Y_INDEX]*2
             box_index = state.index((x_next, y_next))
             state[box_index] = (x_2_next, y_2_next)
         
@@ -499,12 +493,12 @@ class SokobanPuzzle(search.Problem):
         #####################
         # CODE to be filled #
         #####################
-
         raise NotImplementedError
+
 
     def h(self, node):
         """
-        Heuristic function for the Sokoban puzzle.......
+        Heuristic function for the Sokoban puzzle
         """
         # Will need to be refactored to suit the format of the state, assuming
         # here a tuple containing the player (0) & the list of boxes (1)
@@ -651,6 +645,65 @@ if __name__ == "__main__":
     # t1 = time.time()
     # sokobanPuzzle.print_solution(solution)
     # print ("Solver took ",t1-t0, ' seconds')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
