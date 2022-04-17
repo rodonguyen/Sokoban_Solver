@@ -366,14 +366,26 @@ def taboo_cells(warehouse):
     return taboo_cells_string
 
 def get_taboo_cell_coordinates(taboo_cells_string):
+    '''
+    Return a list of tuple(taboo cells coordinates).
+    These coordinates will be used in SokobanPuzzle.actions() 
+    to avoid pushing box on them.
+    '''
+    x = 0
+    y = 0
+    taboo_cells_coordinates = tuple()
 
-        #####################
-        # CODE to be filled #
-        #####################
+    for i in taboo_cells_string:
+        if i == 'X':
+            taboo_cells_coordinates += ((x,y),)  # Add 
+            x += 1
+        elif i == '\n':
+            y += 1
+            x = 0
+        else: 
+            x += 1
 
-    taboo_cells_coordinates = taboo_cells_string  # delete this
-
-    return taboo_cells_coordinates
+    return list(taboo_cells_coordinates)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -411,25 +423,41 @@ class SokobanPuzzle(search.Problem):
             1. If there is a wall in the direction of action, return 'Impossible'.
             2. If there is a box in the direction of action, move to case 1. Otherwise, move to case 2
         - CASE 1: agent push a box 
-            3. If there is NOT an empty space after the box (i.e., not another box or wall) in the direction of action, return 'Impossible'.
+            3. If there is another box / wall / taboo cell after the box in the direction of action, return 'Impossible'.
             4. Move box and agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate box or agent)
         - CASE 2: agent does not push any box
             3. If there is NOT an empty space in the direction of action, return 'Impossible'
             4. Move Agent in the direction of action. (Remember to place an empty space in the agent's previous location. i.e. Make sure we don't duplicate agent)
         '''
         legal_moves = []
-        up    = ( 0 , -1,  'U')
-        down  = ( 0 ,  1,  'D')
-        left  = (-1 ,  0,  'L')
-        right = ( 1 ,  0,  'R')
-        possible_moves = [up, down, left, right]
+        # up    = ( 0 , -1,  'U')
+        # down  = ( 0 ,  1,  'D')
+        # left  = (-1 ,  0,  'L')
+        # right = ( 1 ,  0,  'R')
+        possible_moves = {'U':(0,-1), 'D':(0,1), 'L':(-1,0), 'R':(1,0) }
+        x, y = self.warehouse.worker
 
-        #####################
-        # CODE to be filled #
-        #####################
-
+        for move in possible_moves.keys():
+            x_next, y_next = x + move[X_INDEX], y + move[Y_INDEX]
+            
+            # Wall
+            if (x_next, y_next) in self.warehouse.walls: continue
+            # Box
+            elif (x_next, y_next) in self.warehouse.boxes:
+                x_2_next, y_2_next = x + move[X_INDEX]*2, y + move[Y_INDEX]*2
+                # Another box / wall / taboo cells after box
+                if (x_2_next, y_2_next) in (self.warehouse.boxes + self.warehouse.walls + self.taboo_cells):
+                    continue 
+            # Empty space / Worker can move the box
+            legal_moves += move
         return legal_moves
 
+            #     # Empty space after box
+            #     box_index = self.warehouse.boxes.index((x_next, y_next))
+            #     self.warehouse.boxes[box_index] = (x_2_next, y_2_next)
+            
+            # # Empty space / Worker can move
+            # self.warehouse.worker = (x_next, y_next)
     
     def result(self, state, action):
         """
@@ -577,21 +605,64 @@ if __name__ == "__main__":
     warehouse.load_warehouse(w)
     sokobanPuzzle = SokobanPuzzle(warehouse)
 
-    # print(warehouse.boxes)
-    # print(warehouse.worker)
-    # print(sokobanPuzzle.initial)
+    # Test output format of warehouse attributes
+    print(warehouse.boxes)
+    print(warehouse.worker)
+    print(sokobanPuzzle.initial)
     print(sokobanPuzzle.warehouse.targets)
+    print(warehouse.boxes + warehouse.walls)
+
+    # Test get_taboo_cell_coordinates()
+    print(warehouse)
+    taboo_cells_str = taboo_cells(warehouse)
+    print(taboo_cells_str)
+    coords = get_taboo_cell_coordinates(taboo_cells_str)
+    print(coords)
+    print(warehouse.walls + coords)
+    print((3,7) in coords)
+
     
-
-
-
     # t0 = time.time()
     # solution = search.astar_graph_search(sokobanPuzzle)
     # t1 = time.time()
-
-    # sokobanPuzzle.print_solution(solution) Not yet implemented
-
+    # sokobanPuzzle.print_solution(solution)
     # print ("Solver took ",t1-t0, ' seconds')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -745,12 +816,90 @@ def check_elem_action_seq(warehouse, action_seq):
     # Update 'warehouse' Object        
     warehouse = warehouse.from_string(state)
     return state
+
 --------------------------------------
+    def find(self, state, object):
+        '''
+        Find the object and return its coordinates e.g. (2,4)
+        @params
+            state <String> 
+                String presentation of a Warehouse object
+            object <String>
+                The object you want to locate
 
+        @return
+            location <tuple>
+                The location of the object in (x,y)
+                Or return -1 if not found
 
+        '''
 
+        # Replace object with possible symbols
+        if object == 'agent':
+            objects = ['@', '!'] 
+        else:
+            raise Exception('Invalid object. Input object = {0}'.format(object))
+                
 
+        lines = state.split('\n')
+        for o in objects:
+            for y, line in enumerate(lines):
+                if line.find(o) != -1:
+                    return(line.find(o), y)  # Found and return position
+        
+        return -1  # Can not found object in state / str(warehouse)
 
+    def identify(self, state, x, y):
+        '''
+        Return the object at the provided coordinates 'x' and 'y' in 'state'. Return -1 if the coordinates if outside of the warehouse state.
+        @params
+            state <String> 
+                String presentation of a Warehouse object
+            x <Integer>
+                x coordinate
+            y <Integer>
+                y coordinate
+            
+        @return
+            object <String>
+                The object found at (x,y)
+                Or return -1 if coordinates is outside of the warehouse state.
+
+        '''
+        lines = state.split('\n')
+        try:
+            object = lines[y][x]
+        except:
+            object = -1
+        return object
+
+    def replace(self, state, x, y, new_object):
+        '''
+        Return the state with new_object at the provided coordinates 'x' and 'y' in 'state'. Return -1 if the coordinates if outside of the warehouse state.
+        @params
+            state <String> 
+                String presentation of a Warehouse object
+            x <Integer>
+                x coordinate
+            y <Integer>
+                y coordinate
+            new_object <String>
+                a symbol of the object in warehouse you want to replace (x,y)
+            
+        @return
+            next_state <String>
+                A new state of the warehouse object with (x,y) char 
+                replaced by new_object
+        '''
+
+        lines = state.split('\n')
+        temp_list = list(lines[y])
+        temp_list[x] = new_object 
+        lines[y] = ''.join(temp_list)
+        # lines[y][x] = new_object
+        next_state = '\n'.join(lines)
+
+        return next_state
 
 
 --------------------------------------
