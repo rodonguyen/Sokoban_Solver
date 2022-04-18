@@ -1,0 +1,96 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+            
+        \Huge
+        \textbf{CAB320 Assignment 1: Sokoban}
+            
+        \vspace{0.5cm}
+        \LARGE
+        Intelligent Search – Motion Planning in a Warehouse
+            
+        \vspace{1.5cm}
+            
+        \textbf{Mitchell Egan}
+        n10210776
+        
+        \textbf{Jaydon Gunzburg}
+        n10396489       
+        
+        \textbf{Rodo Nguyen}
+        n10603280
+        
+        \small
+        \vspace{1.5cm}
+        \textbf{Abstract}
+        
+        Sokoban is a 2D Japanese puzzle game created in 1981 in which the player, a warehouse worker, must move a number of boxes to various goal position in the warehouse; without getting any stuck. This version of Sokoban includes the added complexity of having weighted boxes, making the cost of moving a box equal to it's weight (+1 for moving).
+        
+        Our team has designed and implemented a Sokoban solver based off the popular A* search algorithm, with \( ???? \) time complexity and \( O(b^d) \) space complexity. The algorithm determines if a warehouse is possible and if so, it returns the optimal path the player must take to solve the puzzle, along with the cost of that sequence. Of the 108 example warehouses, the shortest execution time was found to be ???? for warehouse ???, while the longest was ??? for warehouse ???.
+            
+        \LARGE
+        \vfill
+            
+        \vspace{0.8cm}
+            
+        \includegraphics[width=0.4\textwidth]{QUTlogo}
+            
+        \Large
+        School of Electrical Engineering and Robotics\\
+        01/05/2021
+            
+    \end{center}
+\end{titlepage}
+
+\newpage
+
+\section{Implementation}
+[first taboo cells are found, then actions are defined, further to problem class, lastly solver.py is used...]
+
+\subsection{Identification of Taboo Cells}
+A cell is classified as taboo if the cell is a corner and not a target, or all cells between two corners along a wall, if no targets exist along that wall. In general terms, a taboo cell is one that if a box is pushed onto, the puzzle becomes impossible to solve.
+The process for locating all taboo cells in a warehouse is as follows:
+\begin{enumerate}
+    \item Determine cells inside the warehouse:{\newline}
+    Using a recursive flood-fill algorithm adopted from the Wikipedia entry on \href{https://en.wikipedia.org/wiki/Flood_fill}{Flood fill}. The algorithm starts from the player's initial position and runs until walls are found, resulting in finding all cells on the inside of the warehouse.
+    \item Determine corner cells inside the warehouse:{\newline}
+    For inside cells, a cell is a corner if it has at least 2 cells directly adjacent to it and those 2 cells are diagonally adjacent to each other.
+    \item Pair corners up:{\newline}
+    All the inside corners are then put into a set of corner pairs, such that they are pairs if they lie on the same row or column of the warehouse.
+    \item Travel between corner pairs and mark taboo cells:{\newline}
+    Traverse between each pair of corners, checking if both of the two walls that could exist adjacent to the travel direction break for more than two blocks, or if there is only one wall, that it doesn't break for more than one block. Once traversed, if no goals were found, all the traversed cells are taboo. Every corner that isn't also a goal is also taboo.
+\end{enumerate}
+
+\subsection{State Representation}
+The most obvious state representation would simply be the entire ware house as a string. This method, however, is computationally wasteful as each time the state is used the entire warehouse string must be parsed. Only dynamic elements of the warehouse are required for the operations performed with and on the state during any search algorithm (where walls and taboo cells are used to determine possible moves - what a node expands to). For this reason, the warehouse state representation is simply a nested tuple containing the player's and boxes' coordinates:
+\[ state = ( (warehouse.player), (warehouse.boxes_1),... (warehouse.boxes_n) ) \]
+
+\subsection{Heuristics}
+text
+
+\[ manhattan\_dist = |x_2-x_1|+|y_2-y_1| \]
+
+\subsection{Any else worth mentioning??}
+text
+
+\section{Testing Methodology}
+text
+
+\subsection{Unit Testing of Taboo Cells}
+text
+
+\section{Performance and Limitations}
+[possibly mention the consideration of detecting walls while calculating the manhattan distance, eventually deciding it would be too computationally expensive]
+
+\section{Future Recommendations}
+[If any one has anything to suggest...]
+
+\end{document}
