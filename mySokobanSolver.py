@@ -4,17 +4,24 @@ from collections import namedtuple
 from itertools import combinations
 from search import astar_graph_search, Node, Problem
 
+# The cost to move the worker before considering weights
 COST = 1
 # Directions for a given action
-DIRECTIONS = {'Left' :(-1,0), 'Right':(1,0) , 'Up':(0,-1), 'Down':(0,1)} 
+DIRECTIONS = {'Left' :(-1,0), 'Right':(1,0) , 'Up':(0,-1), 'Down':(0,1)}
+# The character representing an empty cell
+EMPTY_CHAR = ' '
+# The steps that can be taken on a single axis
 STEPS = (-1, 1)
+# The chatacter representing a taboo cell
+TABOO_CHAR = 'X'
+# The character representing a wall
+WALL_CHAR = '#'
 # The index of the x-coordinate in a 2D tuple
 X_INDEX = 0
 # The index of the y-coordinate in a 2D tuple
 Y_INDEX = 1
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 
 def my_team():
     '''
@@ -67,9 +74,10 @@ def get_inside_cells(warehouse, inside_cells = None, cell = None):
     
     # For each direction (left, right, up, down)
     for action, direction in DIRECTIONS.items():
+        # The next cell in that direction
         next_cell = (cell[X_INDEX] + direction[X_INDEX], cell[Y_INDEX] + direction[Y_INDEX])
         
-        # If not already considered an inside cell, recursively call itself
+        # If not already considered an inside cell, recursively call function
         if next_cell not in inside_cells:
             inside_cells = get_inside_cells(warehouse, inside_cells, next_cell)
             
@@ -77,35 +85,22 @@ def get_inside_cells(warehouse, inside_cells = None, cell = None):
 
 def is_corner(warehouse, cell):
     '''
+    Identify if a cell is a corner by checking it has at least one adjacent
+    wall on each axis. Call any() on generators for each axis to determine if 
+    there's at least one adjacent wall per axis, then AND the results of both
+    any() functions.
     
 
-    Parameters
-    ----------
-    warehouse : TYPE
-        DESCRIPTION.
-    cell : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    TYPE
-        DESCRIPTION.
-
-    '''
-    '''
-    Determine if a cell is a corner by checking it has at least one neighbouring 
-    wall on each axis.
-    
     Parameters
     ----------
     warehouse : Warehouse
         A Warehouse object with the worker inside the warehouse.
-    cell : Tuple
-        A cell to check.
+    cell : tuple (x, y)
+        A cell to check if is corner.
 
     Returns
     -------
-    Bool
+    bool
         True if a cell is a corner, else False.
 
     '''
@@ -117,113 +112,110 @@ def is_corner(warehouse, cell):
 
 def get_corner_cells(warehouse, cells):
     '''
-    
-
-    Parameters
-    ----------
-    warehouse : TYPE
-        DESCRIPTION.
-    cells : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    set
-        DESCRIPTION.
-
-    '''
-    '''
-    Identify corner cells.
+    Identifies all corner cells. Use set comprehension to create set of corners
+    where each cell evaluates to true for is_corner().
 
     Parameters
     ----------
     warehouse : Warehouse
         A Warehouse object with the worker inside the warehouse.
-    cells : List
-        A list of cells to check.
+    cells : Iterable ((x, y), ...)
+        An iterable of cells to check for corner cells.
 
     Returns
     -------
-    corner_cells : List
-        A list of identified corner cells.
-
+    set {(x, y), ...}
+        The set of identified corner cells.
     '''
-         
+
     return {cell for cell in cells if is_corner(warehouse, cell)}
 
-def has_adjacent_wall(warehouse, cell, shared_axis_index):
+def has_adjacent_wall(warehouse, cell, axis_index):
     '''
-    
+    Identify if a cell has at least one adjacent wall along a single axis.
 
     Parameters
     ----------
-    warehouse : TYPE
-        DESCRIPTION.
-    cell : TYPE
-        DESCRIPTION.
-    shared_axis_index : TYPE
-        DESCRIPTION.
+    warehouse : Warehouse
+        A Warehouse object with the worker inside the warehouse.
+    cell : tuple (x, y)
+        A cell to check for adjacent walls.
+    axis_index : int
+        The axis to check for adjacent walls on.
 
     Returns
     -------
     bool
-        DESCRIPTION.
-
+        True if there is at least one adjacent wall, else False.
     '''
     
+    # A mutable form of the cell
     adjacent_cell = list(cell)
     
+    # For each direction (negative, positive)
     for direction in STEPS:
-        adjacent_cell[shared_axis_index] = cell[shared_axis_index] + direction 
+        # The next cell in that direction along the axis
+        adjacent_cell[axis_index] = cell[axis_index] + direction 
                             
         if tuple(adjacent_cell) in warehouse.walls:
             return True
         
     return False
 
-def get_taboo_cells_between(warehouse, inside_corner, other_inside_corner, shared_axis_index):
+def get_taboo_cells_between(warehouse, corner, other_corner, shared_axis_index):
     '''
-    
+    Identify taboo cells on a shared axis between two corners. Check that each 
+    cell isn't a wall, isn't a target and has at least one adjacent wall.
+    Starting at the first cell next to the first corner in the 
+    direction of the second corner, and finishing at the cell before the second
+    corner. If any of the cells fail the criteria, none of the cells between
+    are taboo.
 
     Parameters
     ----------
-    warehouse : TYPE
-        DESCRIPTION.
-    inside_corner : TYPE
-        DESCRIPTION.
-    other_inside_corner : TYPE
-        DESCRIPTION.
-    shared_axis_index : TYPE
-        DESCRIPTION.
+    warehouse : Warehouse
+        A Warehouse object with the worker inside the warehouse.
+    corner : tuple (x, y)
+        The first corner to check for taboo cells between.
+    other_corner : tuple (x, y)
+        The first corner to check for taboo cells between.
+    shared_axis_index : int
+        The axis that both corners share.
 
     Returns
     -------
-    taboo_cells_between : TYPE
-        DESCRIPTION.
-
+    taboo_cells_between : set {(x, y), ...}
+        The set of identified taboo cells between the two corners.
     '''
     taboo_cells_between = set()
     
-    # Flip axis index
+    # Flip axis index i.e. 1 - 0 = 1 & 1 - 1 = 0
     non_shared_axis_index = 1 - shared_axis_index
                     
-    relative_distance = other_inside_corner[non_shared_axis_index] - inside_corner[non_shared_axis_index]
+    relative_distance = other_corner[non_shared_axis_index] - corner[non_shared_axis_index]
                   
     # +/- indication of the direction between corners
     step = relative_distance // abs(relative_distance)
-                  
-    for non_shared_axis_value in range(inside_corner[non_shared_axis_index] + step, 
-                                       other_inside_corner[non_shared_axis_index], 
+    
+    # For each value on the shared axis between the first corner and the second corner    
+    for non_shared_axis_value in range(corner[non_shared_axis_index] + step, 
+                                       other_corner[non_shared_axis_index], 
                                        step):
+        # A mutable form of the cell. Its value cannot be declared explicitly
+        # as the ordering (shared_axis_index, non_shared_axis_index) is unknown.
         cell = [0, 0]
-        cell[shared_axis_index] = inside_corner[shared_axis_index]
+        
+        cell[shared_axis_index] = corner[shared_axis_index]
         cell[non_shared_axis_index] = non_shared_axis_value
         cell = tuple(cell)
                    
-        # If cell isn't a wall and isn't a target
+        # If cell isn't a wall and isn't a target, add to set of taboo cells
         if (cell not in warehouse.walls and cell not in warehouse.targets 
             and has_adjacent_wall(warehouse, cell, shared_axis_index)):
             taboo_cells_between.add(cell)
+        # Else cell is a wall, target or doesn't have an adjacent wall and 
+        # isn't taboo. Previously considered taboo cells are now invalid and no
+        # more cells should be considered.
         else:
             taboo_cells_between.clear()
             break
@@ -231,63 +223,50 @@ def get_taboo_cells_between(warehouse, inside_corner, other_inside_corner, share
     return taboo_cells_between
                     
 
-def get_taboo_cells(warehouse, inside_corner_cells):
+def get_taboo_cells(warehouse, corner_cells):
     '''
-    
-
-    Parameters
-    ----------
-    warehouse : TYPE
-        DESCRIPTION.
-    inside_corner_cells : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    taboo_cells : TYPE
-        DESCRIPTION.
-
-    '''
-    '''
-    Identify taboo cells (inside non-target corners AND 
-    all non-target cells between inside non-target taboo corners).
+    Identify taboo cells. Create unique pairs of corners and check if either is
+    not a target. If a corner isn't a target, add it to the set of taboo cells.
+    If both corners are taboo cells and share an axis, also identify the taboo
+    cells between them.
 
     Parameters
     ----------
     warehouse : Warehouse
         A Warehouse object with the worker inside the warehouse.
-    inside_corner_cells : List
-        A list of inside corners to check.
+    corner_cells : iterable ((x, y), ...)
+        An iterable of corner cells to check for taboo cells.
 
     Returns
     -------
-    List
-        A list of identified taboo cells.
-
+    taboo_cells : set {(x, y), ...}
+        The set of identified taboo cells.
     '''
     
     taboo_cells = set()
-    inside_corner_combinations = combinations(inside_corner_cells, 2)
+    # Unique combinations of corner pairs
+    corner_pairs = combinations(corner_cells, 2)
     
-    for inside_corner, other_inside_corner in inside_corner_combinations:
-        # If inside corner isn't a target
-        if inside_corner not in warehouse.targets:
-            taboo_cells.add(inside_corner)
+    # For each pair of corners
+    for corner, other_corner in corner_pairs:
+        # If inside corner isn't a target, add to set of taboo cells
+        if corner not in warehouse.targets:
+            taboo_cells.add(corner)
             
-        # If other inside corner isn't a target
-        if other_inside_corner not in warehouse.targets:
-            taboo_cells.add(other_inside_corner)
+        # If other inside corner isn't a target, add to set of taboo cells
+        if other_corner not in warehouse.targets:
+            taboo_cells.add(other_corner)
         
         taboo_cells_between = set()
         
         # If both corners are taboo
-        if inside_corner in taboo_cells and other_inside_corner in taboo_cells:
+        if corner in taboo_cells and other_corner in taboo_cells:
             for shared_axis_index in [X_INDEX, Y_INDEX]:
-                # If corners share an axis
-                if inside_corner[shared_axis_index] == other_inside_corner[shared_axis_index]:
+                # If corners share an axis, identify taboo cells between them
+                if corner[shared_axis_index] == other_corner[shared_axis_index]:
                     taboo_cells_between = get_taboo_cells_between(warehouse, 
-                                                                  inside_corner, 
-                                                                  other_inside_corner, 
+                                                                  corner, 
+                                                                  other_corner, 
                                                                   shared_axis_index)
                     break
                 else:
@@ -329,9 +308,9 @@ def taboo_cells(warehouse):
     inside_corner_cells = get_corner_cells(warehouse, inside_cells)
     taboo_cells = get_taboo_cells(warehouse, inside_corner_cells)
     
-    row_strings = [str().join(['#' if (x, y) in warehouse.walls 
-                               else 'X' if (x, y) in taboo_cells 
-                               else ' ' 
+    row_strings = [str().join([WALL_CHAR if (x, y) in warehouse.walls 
+                               else TABOO_CHAR if (x, y) in taboo_cells 
+                               else EMPTY_CHAR
                                for x in range(warehouse.ncols)]) 
                    for y in range(warehouse.nrows)]
     
@@ -339,39 +318,26 @@ def taboo_cells(warehouse):
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-def manhattan_dist(start_cell, end_cell):
+def manhattan_distance(cell, other_cell):
     '''
-    
+    Calculate the manhattan distance between two cells (|x_1 - x_2| + |y_1 - y_2|). 
 
     Parameters
     ----------
-    start_cell : TYPE
-        DESCRIPTION.
-    end_cell : TYPE
-        DESCRIPTION.
+    cell : tuple (x, y)
+        The first cell.
+    other_cell : tuple (x, y)
+        The second cell.
 
     Returns
     -------
-    TYPE
-        DESCRIPTION.
+    int
+        The manhattan distance between the two cells.
 
-    '''
-    '''
-    Finds the manhattan distance from start_cell to end_cell
-
-    Parameters
-    ----------
-    start_cell : (x, y)
-    end_cell : (x, y)
-
-    Returns
-    -------
-    length
-        Length of path from start to end
     '''
     
-    distance_x = abs(end_cell[X_INDEX] - start_cell[X_INDEX])
-    distance_y = abs(end_cell[Y_INDEX] - start_cell[Y_INDEX])
+    distance_x = abs(cell[X_INDEX] - other_cell[X_INDEX])
+    distance_y = abs(cell[Y_INDEX] - other_cell[Y_INDEX])
     
     return distance_x + distance_y
 
@@ -547,70 +513,41 @@ class SokobanPuzzle(Problem):
                 return c + (COST + self.weights[box_index])
             
         return c + COST
-
-    def value(self, state):
-        '''
-        
-
-        Parameters
-        ----------
-        state : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        TYPE
-            DESCRIPTION.
-
-        '''
-        """For optimization problems, each state has a value.  Hill-climbing
-        and related algorithms try to maximize this value."""
-        
-        sum_min_distances_to_targets = 0
-        
-        boxes_without_targets = set(state.boxes).difference(set(self.goal.boxes))
-        targets_without_boxes = set(self.goal.boxes).difference(set(state.boxes))
-        
-        
-        for box, weight in zip(state.boxes, self.weights):   
-            if box in boxes_without_targets:
-                min_distance_to_target = None
-                
-                for target in self.goal.boxes:
-                    if target in targets_without_boxes:
-                        distance_to_target = manhattan_dist(box, target) * (COST + weight)
-                        
-                        if min_distance_to_target is None or distance_to_target < min_distance_to_target:
-                            min_distance_to_target = distance_to_target
-                    else:
-                        continue
-                    
-                sum_min_distances_to_targets += min_distance_to_target
-            else:
-                continue
-        
-        return -sum_min_distances_to_targets
         
     def h(self, node):
         '''
-        
+        Calulate the value of the heuristic for the state of a node. It is the 
+        sum of the minimum manhattan distances between each box and the targets. 
+        It does not consider if a target already has a box, or if multiple boxes 
+        are assigned to the same target.
 
         Parameters
         ----------
-        node : TYPE
-            DESCRIPTION.
+        node : Node
+            A node in a search tree.
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
+        int
+            The value of the heuristic.
 
         '''
-        """
-        Heuristic for goal state of the form...
-        """
         
-        return -self.value(node.state)
+        state = node.state
+        
+        min_distances_to_targets = (# The minimum manhattan distance from the box to a target
+                                    min(distances_to_target 
+                                        # For each of the manhattan distances from the box to targets
+                                        for distances_to_target in 
+                                            # The manhattan distance from the box to the target
+                                            (manhattan_distance(box, target)
+                                             # For each target
+                                             for target in self.goal.boxes))
+                                    # For each box and its corresponding weight
+                                    for box, weight in zip(state.boxes, self.weights))
+        
+        return sum(min_distances_to_targets)
+    
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -944,41 +881,6 @@ class TestSokobanPuzzle(TestCase):
         expected = 100
         self.assertEqual(actual, expected)
         
-    def test_value(self):
-        '''
-        
-
-        Returns
-        -------
-        None.
-
-        '''
-        
-        # Initial state (No boxes on targets)
-        state = self.sokoban_puzzle.initial
-        
-        actual = self.sokoban_puzzle.value(state)
-        expected = -404
-        self.assertEqual(actual, expected)
-        
-        # One box on target
-        worker = (3, 3)
-        boxes = (self.sokoban_puzzle.goal.boxes[0], (5, 2))
-        state = self.sokoban_puzzle.State(worker, boxes)
-        
-        actual = self.sokoban_puzzle.value(state)
-        expected = -700
-        self.assertEqual(actual, expected)
-        
-        # Both boxes on target
-        worker = (3, 3)
-        boxes = self.sokoban_puzzle.goal.boxes
-        state = self.sokoban_puzzle.State(worker, boxes)
-        
-        actual = self.sokoban_puzzle.value(state)
-        expected = 0
-        self.assertEqual(actual, expected)
-        
     def test_h(self):
         '''
         
@@ -994,7 +896,7 @@ class TestSokobanPuzzle(TestCase):
         node = Node(state)
         
         actual = self.sokoban_puzzle.h(node)
-        expected = 404
+        expected = 6
         self.assertEqual(actual, expected)
         
         # One box on target
@@ -1004,7 +906,7 @@ class TestSokobanPuzzle(TestCase):
         node = Node(state)
         
         actual = self.sokoban_puzzle.h(node)
-        expected = 700
+        expected = 4
         self.assertEqual(actual, expected)
         
         # Both boxes on target
