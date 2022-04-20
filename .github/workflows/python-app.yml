@@ -25,10 +25,5 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.9.7"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install numpy scipy
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Run tests
-      run: python -m unittest test_taboo_cells.py
+      run: python -m unittest mySokobanSolver.py
