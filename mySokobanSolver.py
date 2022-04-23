@@ -508,10 +508,12 @@ class SokobanPuzzle(Problem):
         state2.  If the path does matter, it will consider c and maybe state1
         and action. The default method costs 1 for every step in the path."""
         
+        # If a box is moved
         for box_index, (box_before, box_after) in enumerate(zip(state1.boxes, state2.boxes)):
             if box_before != box_after:
                 return c + (COST + self.weights[box_index])
-            
+        
+        # If only the worker moves but not any box
         return c + COST
         
     def h(self, node):
