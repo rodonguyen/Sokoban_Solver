@@ -543,11 +543,9 @@ class SokobanPuzzle(Problem):
                                         for distances_to_target in 
                                             # The manhattan distance from the box to the target
                                             (manhattan_distance(box, target)
-                                             # For each target
-                                             for target in self.goal.boxes))
-                                    # For each box and its corresponding weight
-                                    for box, weight in zip(state.boxes, self.weights))
-        
+                                                # For each target               For each box
+                                                for target in self.goal.boxes)) for box in state.boxes)
+
         return sum(min_distances_to_targets)
     
 
