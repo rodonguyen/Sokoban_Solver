@@ -537,14 +537,15 @@ class SokobanPuzzle(Problem):
         
         state = node.state
         
-        min_distances_to_targets = (# The minimum manhattan distance from the box to a target
-                                    min(distances_to_target 
-                                        # For each of the manhattan distances from the box to targets
-                                        for distances_to_target in 
-                                            # The manhattan distance from the box to the target
-                                            (manhattan_distance(box, target)
-                                                # For each target               For each box
-                                                for target in self.goal.boxes)) for box in state.boxes)
+        min_distances_to_targets = (
+                # The minimum manhattan distance from the box to a target
+                min(distances_to_target 
+                    # For each of the manhattan distances from the box to targets
+                    for distances_to_target in 
+                        # The manhattan distance from the box to the target
+                        (manhattan_distance(box, target)
+                            # For each target               For each box
+                            for target in self.goal.boxes)) for box in state.boxes)
 
         return sum(min_distances_to_targets)
     
