@@ -2,11 +2,12 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
-
+\usepackage{multicol}
 \usepackage{hyperref}
+
 \hypersetup{
     colorlinks=true,
-    urlcolor=cyan,
+    urlcolor=blue,
     }
 
 \usepackage{geometry}
@@ -104,10 +105,25 @@ where \(s\) is a state of a warehouse, \(h\) is the heuristic function, \(h*\) i
 [ consistency......? ]
 
 \section{Testing Methodology [Rodo to implement]}
-text
 
-\subsection{Unit Testing of Taboo Cells [Rodo to implement]}
-text
+\begin{multicols}{2}
+To ensure code functioning properly and giving warnings about any incorrect behaviours during the implementation process, unittest.TestCase module provides a solution for this and also automate testing with GitHub actions in every Push to our GitHub repository.
+
+3 main test classes are implemented in our project, namely TestTabooCells, TestSokobanPuzzle, and TestCheckElemActionSeq. Each of them contains one or more test cases that are responsible for testing related essential functions (as their name suggests) and its \_\_init\_\_ function will load a warehouse which will then be called in the test cases.
+
+\\
+\\
+\\
+\columnbreak
+
+\begin{center}
+\includegraphics[width=0.42\textwidth]{testclasses.png}
+\caption{Testing code: Outlines}
+\end{center}
+\end{multicols}
+
+[2.1 Unit Testing of Taboo Cells - Rodo to implement- no need]
+
 
 \section{Performance and Limitations [J to implement]}
 [other stuff to include??? maybe a table with runtime values??]

@@ -650,7 +650,6 @@ class TestTabooCells(TestCase):
     '''
     
     '''
-    
     def __init__(self, *args, **kwargs):
         '''
         
@@ -708,7 +707,6 @@ class TestSokobanPuzzle(TestCase):
     '''
     
     '''
-    
     def __init__(self, *args, **kwargs):
         '''
         
@@ -924,7 +922,6 @@ class TestCheckElemActionSeq(TestCase):
     '''
     
     '''
-    
     def __init__(self, *args, **kwargs):
         '''
         
