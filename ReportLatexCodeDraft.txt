@@ -2,8 +2,20 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
-\usepackage{hyperref}
 
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    urlcolor=cyan,
+    }
+
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ }
 
 \begin{document}
 
@@ -34,7 +46,8 @@
         \textbf{Abstract}
         
         Sokoban is a 2D Japanese puzzle game created in 1981 in which the player, a warehouse worker, must move a number of boxes to goal positions located around the warehouse; without getting any stuck. This version of Sokoban includes the added complexity of having weighted boxes, making the cost of moving a box equal to it's weight (+1 for moving).
-        
+        {\newline}
+        {\newline}
         Our team has designed and implemented a Sokoban solver using the popular A* search algorithm, with \( ???? \) time complexity and \( O(b^d) \) space complexity. The algorithm determines if a warehouse is possible and if so, it returns the optimal path the player must take to solve the puzzle, along with the cost of that sequence. Of the 108 example warehouses, the shortest execution time was found to be ???? for warehouse ???, while the longest was ??? for warehouse ???.
             
         \LARGE
