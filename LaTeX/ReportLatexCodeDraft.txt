@@ -4,6 +4,7 @@
 \usepackage{graphicx}
 \usepackage{multicol}
 \usepackage{hyperref}
+\usepackage{multirow}
 
 \hypersetup{
     colorlinks=true,
@@ -49,7 +50,7 @@
         Sokoban is a 2D Japanese puzzle game created in 1981 in which the player, a warehouse worker, must move a number of boxes to goal positions located around the warehouse; without getting any stuck. This version of Sokoban includes the added complexity of having weighted boxes, making the cost of moving a box equal to it's weight (+1 for moving).
         {\newline}
         {\newline}
-        Our team has designed and implemented a Sokoban solver using the popular A* search algorithm, with \( ???? \) time complexity and \( O(b^d) \) space complexity. The algorithm determines if a warehouse is possible and if so, it returns the optimal path the player must take to solve the puzzle, along with the cost of that sequence. Of the 108 example warehouses, the shortest execution time was found to be ???? for warehouse ???, while the longest was ??? for warehouse ???.
+        Our team has designed and implemented a Sokoban solver using the popular A* search algorithm. The algorithm determines if a warehouse is possible and if so, it returns the optimal path the player must take to solve the puzzle, along with the cost of that sequence.
             
         \LARGE
         \vfill
@@ -101,7 +102,7 @@ The Manhattan distance formula can be expressed as:
 \newline
 \newline
 The admissibility of this heuristic function is when utilizing Manhattan distance function, it only takes into account the boxes and their closest targets in a warehouse. Thus, every other obstacles (e.g. another box or wall) are ignored and boxes assumably can be moved straight towards the targets along x and y axes. For that reason, it is certain that:
-%
+% Discuss true cost here.
 Ensuring only the closest target to each box is used and ignoring walls when calculating Manhattan distances, underestimates the true path cost each iteration. Doing so, guarantees the heuristic is admissible such that:
 %
 \[ 0 \le h(s) \le h^*(s) \]
@@ -114,10 +115,27 @@ where \(s\) is a state of a warehouse, \(h\) is the heuristic function, \(h*\) i
 
 To ensure code functioning properly and giving warnings about any incorrect behaviours during the implementation process, unittest.TestCase module provides a solution for this and also automate testing with GitHub actions in every Push to our GitHub repository.
 \newline
-3 main test classes are implemented in our project, namely TestTabooCells, TestSokobanPuzzle, and TestCheckElemActionSeq. Each of them contains one or more test cases that are responsible for testing related essential functions (as their name suggests) and each \_\_init\_\_ function will load a warehouse which will then be called in the test cases.
+3 main test classes are implemented in our project, namely TestTabooCells, TestSokobanPuzzle, and TestCheckElemActionSeq. Each of them contains one or more test cases that are responsible for testing related essential functions (as their name suggests) and each \_\_init\_\_ function will load a warehouse which will then be called in its test cases.
 
-\section{Performance and Limitations [J to implement]}
-\subsection{Runtime and Cost Comparison}
+\section{Performance and Limitations}
+\subsection{Analysis Time and Cost Comparison}
+Accompanying the supplied code is a list of example analysis run times and expected costs for 7 different warehouses. Table 1 shows that our implementation performed as expected, and sometimes better than the examples given. The cost for each warehouse was the same, showing both programs successfully found the optimal path. Comparing analysis times will not be accurate as different computers were used. The ratio between the analysis times however, can give, albeit prone to variability, some comparison of performance.
+\begin{table}[htbp]
+  \centering
+    \begin{tabular}{rrlrl}
+    \multicolumn{1}{c}{\multirow{2}[0]{*}{\textbf{Warehouse}}} & \multicolumn{2}{l}{\textbf{Comparison Example}} & \multicolumn{2}{l}{\textbf{Our Implementation}} \\
+          & \textit{Analysis Time [s]} & \multicolumn{1}{r}{\textit{Cost}} & \textit{Analysis Time [s]} & \multicolumn{1}{r}{\textit{Cost}} \\
+    \textbf{7} & 300.645556 & \multicolumn{1}{r}{26} & 172.69176 & \multicolumn{1}{r}{26} \\
+    \textbf{9} & 0.009575 & \multicolumn{1}{r}{369} & 0.003492 & \multicolumn{1}{r}{396} \\
+    \textbf{47} & 0.122561 & \multicolumn{1}{r}{179} & 0.100814 & \multicolumn{1}{r}{179} \\
+    \textbf{81} & 0.17024 & \multicolumn{1}{r}{376} & 0.299447 & \multicolumn{1}{r}{376} \\
+    \textbf{147} & 197.910769 & \multicolumn{1}{r}{521} & 205.869627 & \multicolumn{1}{r}{521} \\
+    \textbf{111} & \(>\)12 [hours] & \multicolumn{1}{r}{N/A} & \(>\)12 [hours] & \multicolumn{1}{r}{N/A} \\
+    \textbf{5n} & 1.504564 & Impossible & 1.371451 & Impossible \\
+    \end{tabular}%
+  \label{tab:analysis}%
+  \caption{Analysis Time and Cost Comparison}
+\end{table}%
 
 \subsection{Manhattan Distance Evaluation}
 A* is only as good as its heuristic; underestimating a heuristic as close to the true cost of an optimal path guarantees admissibility, while ensuring high efficiency. For this reason, ideally, the manhattan distance between two points should consider walls and return the true manhattan path through the warehouse between the points. To implement this however, the program would be required to run another search algorithm such as Breath-First-Search, just to find this ideal path.
