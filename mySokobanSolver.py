@@ -1,25 +1,19 @@
-from unittest import main, TestCase
-from sokoban import find_2D_iterator, Warehouse
 from collections import namedtuple
 from itertools import combinations
 from search import astar_graph_search, Node, Problem
+from sokoban import find_2D_iterator, Warehouse
+from unittest import main, TestCase
 
+# The characters representing empty, taboo and wall cells
+CELL_CHARS = {'Empty':' ', 'Taboo':'X', 'Wall':'#'}
 # The cost to move the worker before considering weights
 COST = 1
 # Directions for a given action
-DIRECTIONS = {'Left' :(-1,0), 'Right':(1,0) , 'Up':(0,-1), 'Down':(0,1)}
-# The character representing an empty cell
-EMPTY_CHAR = ' '
+DIRECTIONS = {'Left':(-1,0), 'Right':(1,0), 'Up':(0,-1), 'Down':(0,1)}
+# Indexes of the x- & y-coordinate in a 2D tuple
+INDEXES = {'x':0, 'y':1}
 # The steps that can be taken on a single axis
-STEPS = (-1, 1)
-# The chatacter representing a taboo cell
-TABOO_CHAR = 'X'
-# The character representing a wall
-WALL_CHAR = '#'
-# The index of the x-coordinate in a 2D tuple
-X_INDEX = 0
-# The index of the y-coordinate in a 2D tuple
-Y_INDEX = 1
+STEPS = {'Negative':-1, 'Positive':1}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -29,7 +23,9 @@ def my_team():
     of triplet of the form (student_number, first_name, last_name)
     
     '''
-    return [(10210776, 'Mitchell', 'Egan'), (10396489, 'Jaydon', 'Gunzburg'), (10603280, 'Rodo', 'Nguyen')]
+    return [(10210776, 'Mitchell', 'Egan'), 
+            (10396489, 'Jaydon', 'Gunzburg'), 
+            (10603280, 'Rodo', 'Nguyen')]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -73,9 +69,10 @@ def get_inside_cells(warehouse, inside_cells = None, cell = None):
     inside_cells.add(cell)
     
     # For each direction (left, right, up, down)
-    for action, direction in DIRECTIONS.items():
+    for _, direction in DIRECTIONS.items():
         # The next cell in that direction
-        next_cell = (cell[X_INDEX] + direction[X_INDEX], cell[Y_INDEX] + direction[Y_INDEX])
+        next_cell = (cell[INDEXES['x']] + direction[INDEXES['x']], 
+                     cell[INDEXES['y']] + direction[INDEXES['y']])
         
         # If not already considered an inside cell, recursively call function
         if next_cell not in inside_cells:
@@ -105,8 +102,10 @@ def is_corner(warehouse, cell):
 
     '''
     
-    wall_neighbour_x = any((cell[X_INDEX] + x, cell[Y_INDEX]) in warehouse.walls for x in STEPS)
-    wall_neighbour_y = any((cell[X_INDEX], cell[Y_INDEX] + y) in warehouse.walls for y in STEPS)
+    wall_neighbour_x = any((cell[INDEXES['x']] + step, cell[INDEXES['y']]) 
+                           in warehouse.walls for _, step in STEPS.items())
+    wall_neighbour_y = any((cell[INDEXES['x']], cell[INDEXES['y']] + step) 
+                           in warehouse.walls for _, step in STEPS.items())
     
     return wall_neighbour_x and wall_neighbour_y
 
@@ -153,9 +152,9 @@ def has_adjacent_wall(warehouse, cell, axis_index):
     adjacent_cell = list(cell)
     
     # For each direction (negative, positive)
-    for direction in STEPS:
+    for _, step in STEPS.items():
         # The next cell in that direction along the axis
-        adjacent_cell[axis_index] = cell[axis_index] + direction 
+        adjacent_cell[axis_index] = cell[axis_index] + step 
                             
         if tuple(adjacent_cell) in warehouse.walls:
             return True
@@ -202,7 +201,7 @@ def get_taboo_cells_between(warehouse, corner, other_corner, shared_axis_index):
                                        other_corner[non_shared_axis_index], 
                                        step):
         # A mutable form of the cell. Its value cannot be declared explicitly
-        # as the ordering (shared_axis_index, non_shared_axis_index) is unknown.
+        # as the ordering (shared_axis_index, non_shared_axis_index) is unknown
         cell = [0, 0]
         
         cell[shared_axis_index] = corner[shared_axis_index]
@@ -210,12 +209,13 @@ def get_taboo_cells_between(warehouse, corner, other_corner, shared_axis_index):
         cell = tuple(cell)
                    
         # If cell isn't a wall and isn't a target, add to set of taboo cells
-        if (cell not in warehouse.walls and cell not in warehouse.targets 
+        if (cell not in warehouse.walls 
+            and cell not in warehouse.targets 
             and has_adjacent_wall(warehouse, cell, shared_axis_index)):
             taboo_cells_between.add(cell)
         # Else cell is a wall, target or doesn't have an adjacent wall and 
         # isn't taboo. Previously considered taboo cells are now invalid and no
-        # more cells should be considered.
+        # more cells should be considered
         else:
             taboo_cells_between.clear()
             break
@@ -261,7 +261,7 @@ def get_taboo_cells(warehouse, corner_cells):
         
         # If both corners are taboo
         if corner in taboo_cells and other_corner in taboo_cells:
-            for shared_axis_index in [X_INDEX, Y_INDEX]:
+            for shared_axis_index in [INDEXES['x'], INDEXES['y']]:
                 # If corners share an axis, identify taboo cells between them
                 if corner[shared_axis_index] == other_corner[shared_axis_index]:
                     taboo_cells_between = get_taboo_cells_between(warehouse, 
@@ -308,9 +308,9 @@ def taboo_cells(warehouse):
     inside_corner_cells = get_corner_cells(warehouse, inside_cells)
     taboo_cells = get_taboo_cells(warehouse, inside_corner_cells)
     
-    row_strings = [str().join([WALL_CHAR if (x, y) in warehouse.walls 
-                               else TABOO_CHAR if (x, y) in taboo_cells 
-                               else EMPTY_CHAR
+    row_strings = [str().join([CELL_CHARS['Wall'] if (x, y) in warehouse.walls 
+                               else CELL_CHARS['Taboo'] if (x, y) in taboo_cells 
+                               else CELL_CHARS['Empty']
                                for x in range(warehouse.ncols)]) 
                    for y in range(warehouse.nrows)]
     
@@ -320,7 +320,7 @@ def taboo_cells(warehouse):
 
 def manhattan_distance(cell, other_cell):
     '''
-    Calculate the manhattan distance between two cells (|x_1 - x_2| + |y_1 - y_2|). 
+    Determine the manhattan distance between two cells (|x_1 - x_2| + |y_1 - y_2|). 
 
     Parameters
     ----------
@@ -333,127 +333,150 @@ def manhattan_distance(cell, other_cell):
     -------
     int
         The manhattan distance between the two cells.
-
     '''
     
-    distance_x = abs(cell[X_INDEX] - other_cell[X_INDEX])
-    distance_y = abs(cell[Y_INDEX] - other_cell[Y_INDEX])
+    distance_x = abs(cell[INDEXES['x']] - other_cell[INDEXES['x']])
+    distance_y = abs(cell[INDEXES['y']] - other_cell[INDEXES['y']])
     
     return distance_x + distance_y
 
 class SokobanPuzzle(Problem):
     '''
     An instance of the class 'SokobanPuzzle' represents a Sokoban puzzle.
-    An instance contains information about the walls, the targets, the boxes
-    and the worker.
     
+    State : namedtuple (worker: (x, y), boxes: ((x, y), ...))
+        Tuple subclass to instantiate puzzle states.
+        
+    initial : State (worker: (x, y), boxes: ((x, y), ...))
+        The initial state of the puzzle.
+        
+    goal : State (worker: (x, y), boxes: ((x, y), ...))
+        The goal state of the puzzle, the worker position is irrelevant.
+        
+    taboo_cells : set {(x, y), ...}
+        The set of taboo cell coordinates.
+        
+    walls : set {(x, y), ...}
+        The set of wall cell coordinates.
+        
+    weights : tuple ((x, y), ...)
+        A tuple of box weights.
     '''
     
     def __init__(self, warehouse):
         '''
-        
+        Construct subclass by calling the constructor of the base class with
+        the initial & goal state, then store the box weights and the 
+        coordinates of taboo cells & walls as attributes.
 
         Parameters
         ----------
-        warehouse : TYPE
-            DESCRIPTION.
+        warehouse : Warehouse
+            A Warehouse object with the worker inside the warehouse.
 
         Returns
         -------
         None.
-
         '''
+        # Create tuple subclass to instantiate puzzle states
         self.State = namedtuple("State", ["worker", "boxes"])
         
         initial = self.State(warehouse.worker, tuple(warehouse.boxes))
         goal = self.State(None, tuple(warehouse.targets))
         
+        # Call base class constructor with the initial and goal state
         super().__init__(initial, goal)
         
+        # Get taboo cell coordinates from warehouse string
         taboo_cells_string = taboo_cells(warehouse)
         taboo_cells_lines = taboo_cells_string.split(sep = "\n")
+        self.taboo_cells = set(find_2D_iterator(taboo_cells_lines, CELL_CHARS['Taboo']))
         
-        self.taboo_cells = set(find_2D_iterator(taboo_cells_lines, "X"))
         self.walls = set(warehouse.walls)
         self.weights = tuple(warehouse.weights)
         
     def actions(self, state):
         '''
-        
+        Identify which actions can be performed in the provided state. For each
+        possible direction, ensure the player isn't walking into a wall, then 
+        if they are pushing a box - ensure the box isn't being pushed into a 
+        wall, taboo cell or another box.
 
         Parameters
         ----------
-        state : TYPE
-            DESCRIPTION.
+        state : State (worker: (x, y), boxes: ((x, y), ...))
+            The state of the puzzle.
 
         Returns
         -------
-        actions_list : TYPE
-            DESCRIPTION.
-
+        actions_list : list ['action', ...]
+            The list of possible actions as strings.
         '''
-        """
-        Return the list of actions that can be executed in the given state.
-
-        """
         
         actions_list = list()      
         x,y = state.worker
         
+        # For each action string and its corresponding direction
         for action, direction in DIRECTIONS.items():
-            x_next, y_next = x + direction[X_INDEX], y + direction[Y_INDEX]
+            x_next, y_next = x + direction[INDEXES['x']], y + direction[INDEXES['y']]
     
-            # If trying to walk into wall
+            # If trying to walk into wall, forbidden action - continue
             if (x_next, y_next) in self.walls:
                 continue
-            # If trying to push a box
+            # If trying to push a box, check if push is valid
             if (x_next, y_next) in state.boxes:
                 box_x, box_y = x_next, y_next
-                box_x_next, box_y_next = box_x + direction[X_INDEX], box_y + direction[Y_INDEX]
+                box_x_next = box_x + direction[INDEXES['x']]
+                box_y_next = box_y + direction[INDEXES['y']]
                 
-                # If trying to push box into a wall, taboo cell or another box
-                if ((box_x_next, box_y_next) in self.walls or
-                    (box_x_next, box_y_next) in self.taboo_cells or
-                    (box_x_next, box_y_next) in state.boxes):
+                # If trying to push box into a wall, taboo cell or another box, 
+                # forbidden action - continue
+                if any((box_x_next, box_y_next) in forbidden_pushes 
+                       for forbidden_pushes in (self.walls, 
+                                               self.taboo_cells, 
+                                               state.boxes)):
                     continue
-                
+
             actions_list.append(action)
         
         return actions_list
         
     def result(self, state, action):
         '''
-        
+        Determine the state which results from the provided action being 
+        performed in the provided state. First identify the direction of the
+        action, then update the worker coordinate, and if pushing a box update 
+        the box coordinate accordingly.
 
         Parameters
         ----------
-        state : TYPE
-            DESCRIPTION.
-        action : TYPE
-            DESCRIPTION.
+        state : State (worker: (x, y), boxes: ((x, y), ...))
+            The state of the puzzle.
+        action : string
+            The action to perform. It is a precondition that this is one of the 
+            actions returned by self.actions(state).
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
-
+        State (worker: (x, y), boxes: ((x, y), ...))
+            The state of the puzzle after performing the action.
         '''
-        """Return the state that results from executing the given
-        action in the given state. The action must be one of
-        self.actions(state)."""
         
         x,y = state.worker
         direction = DIRECTIONS[action]
         
-        x_next, y_next = x + direction[X_INDEX], y + direction[Y_INDEX]
+        # Get next worker position
+        x_next, y_next = x + direction[INDEXES['x']], y + direction[INDEXES['y']]
+        
+        # A mutable form of the state's boxes
         boxes_next = list(state.boxes)
         
-        # If trying to push a box
+        # If trying to push a box, get next box position
         if (x_next, y_next) in state.boxes:
             box_x, box_y = x_next, y_next
-            box_x_next, box_y_next = box_x + direction[X_INDEX], box_y + direction[Y_INDEX]
-        
-            # Update box position
+            box_x_next = box_x + direction[INDEXES['x']]
+            box_y_next = box_y + direction[INDEXES['y']]
+           
             box_index = state.boxes.index((box_x, box_y))
             boxes_next[box_index] = (box_x_next, box_y_next)  
             
@@ -462,66 +485,63 @@ class SokobanPuzzle(Problem):
         
     def goal_test(self, state):
         '''
-        
+        Determine if the provided state is the goal state. Check if the set 
+        (note that it is unordered) of state boxes is equal to the set of goal 
+        boxes. The position of the worker is irrelevant.
 
         Parameters
         ----------
-        state : TYPE
-            DESCRIPTION.
+        state : State (worker: (x, y), boxes: ((x, y), ...))
+            The state of the puzzle.
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
-
+        bool
+            True if the state is the goal state, else False.
         '''
-        """Return True if the state is a goal. The default method compares the
-        state to self.goal, as specified in the constructor. Override this
-        method if checking against a single self.goal is not enough."""
         
         return set(state.boxes) == set(self.goal.boxes)
 
     def path_cost(self, c, state1, action, state2):
         '''
-        
+        Determine the cost of the path taken after arriving at state2 from
+        state1. The action is irrelevant. First determine if a box has been 
+        moved. If not, add the base movement cost to the cost-upto state1 (c). 
+        If a box has been moved, add the base movement-cost and the weight of 
+        the moved box to to the cost-upto state1.
 
         Parameters
         ----------
-        c : TYPE
-            DESCRIPTION.
-        state1 : TYPE
-            DESCRIPTION.
-        action : TYPE
-            DESCRIPTION.
-        state2 : TYPE
-            DESCRIPTION.
+        c : int
+            The summative cost upto state1.
+        state1 : State (worker: (x, y), boxes: ((x, y), ...))
+            The first state of the puzzle.
+        state2 : State (worker: (x, y), boxes: ((x, y), ...))
+            The second state of the puzzle.
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
+        int
+            The summative cost upto state2.
 
         '''
-        """Return the cost of a solution path that arrives at state2 from
-        state1 via action, assuming cost c to get up to state1. If the problem
-        is such that the path doesn't matter, this function will only look at
-        state2.  If the path does matter, it will consider c and maybe state1
-        and action. The default method costs 1 for every step in the path."""
         
-        # If a box is moved
+        # For each box (its position before & after) and its corresponding index
         for box_index, (box_before, box_after) in enumerate(zip(state1.boxes, state2.boxes)):
+            # If the box has moved
             if box_before != box_after:
                 return c + (COST + self.weights[box_index])
         
-        # If only the worker moves but not any box
+        
         return c + COST
         
     def h(self, node):
         '''
         Calulate the value of the heuristic for the state of a node. It is the 
-        sum of the minimum manhattan distances between each box and the targets. 
-        It does not consider if a target already has a box, or if multiple boxes 
-        are assigned to the same target.
+        sum of the minimum manhattan distances (multiplied by the base cost 
+        plus the box weight) between each box and the targets. It does not 
+        consider if a target already has a box, or if multiple boxes are 
+        assigned to the same target.
 
         Parameters
         ----------
@@ -532,20 +552,22 @@ class SokobanPuzzle(Problem):
         -------
         int
             The value of the heuristic.
-
         '''
         
         state = node.state
         
         min_distances_to_targets = (
-                # The minimum manhattan distance from the box to a target
+                # The minimum distance
                 min(distances_to_target 
-                    # For each of the manhattan distances from the box to targets
+                    # For each of the distances
                     for distances_to_target in 
-                        # The manhattan distance from the box to the target
-                        (manhattan_distance(box, target)
-                            # For each target               For each box
-                            for target in self.goal.boxes)) for box in state.boxes)
+                        # The manhattan distance (multiplied by the base cost 
+                        # plus the box weight) from the box to the target
+                        (manhattan_distance(box, target) * (weight + COST)
+                            # For each target               
+                            for target in self.goal.boxes)) 
+                # For each box and its corresponding weight
+                for box, weight in zip(state.boxes, self.weights))
 
         return sum(min_distances_to_targets)
     
@@ -575,24 +597,27 @@ def check_elem_action_seq(warehouse, action_seq):
                the sequence of actions.  This must be the same string as the
                string returned by the method Warehouse.__str__()
     '''
-
+    
+    # Copy the warehouse so that it can be updated without referencing the 
+    # original state
     updated_warehouse = warehouse.copy(boxes = warehouse.boxes.copy(), 
                                        weights = warehouse.weights.copy())
     
+    # For each action, check if action is possible
     for action in action_seq:
         x,y = updated_warehouse.worker
         direction = DIRECTIONS[action]
-        x_next, y_next = x + direction[X_INDEX], y + direction[Y_INDEX]
+        x_next, y_next = x + direction[INDEXES['x']], y + direction[INDEXES['y']]
     
-        # If trying to walk into wall
+        # If trying to walk into wall, impossible action
         if (x_next, y_next) in updated_warehouse.walls:
             return 'Impossible'
-        # If trying to push a box
+        # If trying to push a box, check if push is possible
         if (x_next, y_next) in updated_warehouse.boxes:
             box_x, box_y = x_next, y_next
-            box_x_next, box_y_next = box_x + direction[X_INDEX], box_y + direction[Y_INDEX]
+            box_x_next, box_y_next = box_x + direction[INDEXES['x']], box_y + direction[INDEXES['y']]
             
-            # If trying to push box into a wall or another box
+            # If trying to push box into a wall or another box, impossible action
             if ((box_x_next, box_y_next) in updated_warehouse.walls or
                 (box_x_next, box_y_next) in updated_warehouse.boxes):
                 return 'Impossible'
@@ -630,13 +655,14 @@ def solve_weighted_sokoban(warehouse):
             For example, ['Left', 'Down', Down','Right', 'Up', 'Down']
             If the puzzle is already in a goal state, simply return []
             C is the total cost of the action sequence C
-
     '''
     
     sokoban_puzzle = SokobanPuzzle(warehouse)
     
     solution_node = astar_graph_search(sokoban_puzzle)
     
+    # If no solution is found or solution contains an impossible action, 
+    # indicate impossible
     if (solution_node is None or 
         check_elem_action_seq(warehouse, solution_node.solution()) == 'Impossible'):
         return 'Impossible', None
@@ -648,23 +674,13 @@ def solve_weighted_sokoban(warehouse):
 
 class TestTabooCells(TestCase):
     '''
-    
+    TestCase subclass for testing the taboo_cells function.
     '''
+    
     def __init__(self, *args, **kwargs):
         '''
-        
-
-        Parameters
-        ----------
-        *args : TYPE
-            DESCRIPTION.
-        **kwargs : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        None.
-
+        Initialise the test class by constructing a warehouse which contains 
+        all possible scenarios for classifying taboo cells and non-taboo cells.
         '''
         
         super().__init__(*args, **kwargs)
@@ -684,12 +700,8 @@ class TestTabooCells(TestCase):
     
     def test_taboo_cells(self):
         '''
-        
-
-        Returns
-        -------
-        None.
-
+        Assert that the answer returned from taboo_cells matches that which was
+        manually determined.
         '''
         
         actual = taboo_cells(self.warehouse)
@@ -705,23 +717,13 @@ class TestTabooCells(TestCase):
         
 class TestSokobanPuzzle(TestCase):
     '''
-    
+    TestCase subclass for testing the methods in the SokobanPuzzle class.
     '''
+    
     def __init__(self, *args, **kwargs):
         '''
-        
-
-        Parameters
-        ----------
-        *args : TYPE
-            DESCRIPTION.
-        **kwargs : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        None.
-
+        Initialise the test class by constructing warehouse_8a and 
+        instantiating the SokobanPuzzle class with it.
         '''
         
         super().__init__(*args, **kwargs)
@@ -741,12 +743,9 @@ class TestSokobanPuzzle(TestCase):
         
     def test_actions(self):
         '''
-        
-
-        Returns
-        -------
-        None.
-
+        Assert that the answers returned from sokoban_puzzle.actions matches 
+        those which were manually determined. There are multiple asserts for 
+        each of the possible conditions.
         '''
         
         # Initial state (wall on down side of worker)
@@ -785,12 +784,9 @@ class TestSokobanPuzzle(TestCase):
         
     def test_result(self):
         '''
-        
-
-        Returns
-        -------
-        None.
-
+        Assert that the answers returned from sokoban_puzzle.result matches 
+        those which were manually determined. There are multiple asserts for 
+        each of the possible conditions.
         '''
         
         # Moving up fron initial state (nothing on up side of worker) 
@@ -813,12 +809,9 @@ class TestSokobanPuzzle(TestCase):
         
     def test_goal_test(self):
         '''
-        
-
-        Returns
-        -------
-        None.
-
+        Assert that the answers returned from sokoban_puzzle.goal_test matches 
+        those which were manually determined. There are multiple asserts for 
+        each of the possible conditions.
         '''
         
         # Initial state (No boxes on targets)
@@ -848,12 +841,9 @@ class TestSokobanPuzzle(TestCase):
         
     def test_path_cost(self):
         '''
-        
-
-        Returns
-        -------
-        None.
-
+        Assert that the answers returned from sokoban_puzzle.path_cost matches 
+        those which were manually determined. There are multiple asserts for 
+        each of the possible conditions.
         '''
         
         # Moving up from initial state (no box pushed)
@@ -882,12 +872,9 @@ class TestSokobanPuzzle(TestCase):
         
     def test_h(self):
         '''
-        
-
-        Returns
-        -------
-        None.
-
+        Assert that the answers returned from sokoban_puzzle.h matches those 
+        which were manually determined. There are multiple asserts for each of
+        the possible conditions.
         '''
         
         # Initial state (No boxes on targets)
@@ -895,7 +882,7 @@ class TestSokobanPuzzle(TestCase):
         node = Node(state)
         
         actual = self.sokoban_puzzle.h(node)
-        expected = 6
+        expected = 404
         self.assertEqual(actual, expected)
         
         # One box on target
@@ -905,7 +892,7 @@ class TestSokobanPuzzle(TestCase):
         node = Node(state)
         
         actual = self.sokoban_puzzle.h(node)
-        expected = 4
+        expected = 400
         self.assertEqual(actual, expected)
         
         # Both boxes on target
@@ -920,23 +907,12 @@ class TestSokobanPuzzle(TestCase):
         
 class TestCheckElemActionSeq(TestCase):
     '''
-    
+    TestCase subclass for testing the check_elem_action_seq function.
     '''
+    
     def __init__(self, *args, **kwargs):
         '''
-        
-
-        Parameters
-        ----------
-        *args : TYPE
-            DESCRIPTION.
-        **kwargs : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        None.
-
+        Initialise the test class by constructing warehouse_8a.
         '''
         
         super().__init__(*args, **kwargs)
@@ -955,12 +931,9 @@ class TestCheckElemActionSeq(TestCase):
         
     def test_check_elem_action_seq(self):
         '''
-        
-
-        Returns
-        -------
-        None.
-
+        Assert that the answers returned from check_elem_action_seq matches
+        those which were manually determined. There are multiple asserts for 
+        each of the possible conditions.
         '''
         
         # Walk
