@@ -208,8 +208,7 @@ def get_taboo_cells_between(warehouse, corner, other_corner, shared_axis_index):
         cell[non_shared_axis_index] = non_shared_axis_value
         cell = tuple(cell)
                    
-        # If cell isn't a wall, isn't a target and has at least one adjacent 
-        # wall, add to set of taboo cells
+        # If cell isn't a wall and isn't a target, add to set of taboo cells
         if (cell not in warehouse.walls 
             and cell not in warehouse.targets 
             and has_adjacent_wall(warehouse, cell, shared_axis_index)):
@@ -981,59 +980,6 @@ class TestCheckElemActionSeq(TestCase):
         actual = check_elem_action_seq(self.warehouse, action_seq)
         expected = 'Impossible'
         self.assertEqual(actual, expected)
-        
-class TestSolveWeightedSokoban(TestCase):
-    '''
-    TestCase subclass for testing the solve_weighted_sokoban function.
-    '''
-    
-    def __init__(self, *args, **kwargs):
-        '''
-        Initialise the test class by constructing warehouse_8a.
-        '''
-        
-        super().__init__(*args, **kwargs)
-        
-        self.solvable_warehouse = Warehouse()
-        self.impossible_warehouse = Warehouse()
-        
-        # Warehouse_09
-        solvable_lines = ["3 87",
-                          " ##### ",
-                          " #.  ##",
-                          " #@$$ #",
-                          " ##   #",
-                          "  ##  #",
-                          "   ##.#",
-                          "    ###"]
-        
-        # Warehouse_5n
-        impossible_lines = ["  #### #### ",
-                            " ##  ###  ##",
-                            " #   # #   #",
-                            " #  *. .*  #",
-                            " ###$   $###",
-                            "  #   @   # ",
-                            " ###########"]
-        
-        self.solvable_warehouse.from_lines(solvable_lines)
-        self.impossible_warehouse.from_lines(impossible_lines)
-        
-    def test_solve_weighted_sokoban(self):
-        '''
-        Assert that the answers returned from solve_weighted_sokoban matches
-        those which were calculated by Fred's solver. There are multiple asserts 
-        for each of the possible conditions.
-        '''
-        
-        # Solvable, cost from spec
-        _, actual = solve_weighted_sokoban(self.solvable_warehouse)
-        expected = 396
-        self.assertEqual(actual, expected)
-        
-        # Impossible, cost from spec
-        _, actual = solve_weighted_sokoban(self.impossible_warehouse)
-        expected = None
         
 if __name__ == '__main__':
     main()
