@@ -661,8 +661,8 @@ def solve_weighted_sokoban(warehouse):
     sokoban_puzzle = SokobanPuzzle(warehouse)
     
     ### Choosing one of the 2: Graph / Tree
-    # solution_node = astar_graph_search(sokoban_puzzle)
-    solution_node = astar_tree_search(sokoban_puzzle)
+    solution_node = astar_graph_search(sokoban_puzzle)
+    # solution_node = astar_tree_search(sokoban_puzzle)
     
     # If no solution is found or solution contains an impossible action, 
     # indicate impossible
@@ -986,7 +986,7 @@ class TestSolveWeightedSokoban(TestCase):
     '''
     TestCase subclass for testing the solve_weighted_sokoban function.
     '''
-    
+
     def __init__(self, *args, **kwargs):
         '''
         Initialise the test class by constructing warehouse_8a.
